@@ -1,6 +1,23 @@
 import { Link } from 'react-router-dom'
 import logoImage from '../assets/brand/elura-logo.svg'
-import { contactDetails, footerGroups } from '../data/siteData.js'
+import { contactDetails } from '../data/siteData.js'
+
+const shopLinks = [
+  { label: 'Necklaces', href: '/shop?category=Necklaces' },
+  { label: 'Earrings', href: '/shop?category=Earrings' },
+  { label: 'Rings', href: '/shop?category=Rings' },
+  { label: 'Bracelets', href: '/shop?category=Bracelets' },
+  { label: 'Bangles', href: '/shop?category=Bangles' },
+]
+
+const quickLinks = [
+  { label: 'About', href: '/about' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms & Conditions', href: '/terms' },
+  { label: 'Refund Policy', href: '/refund-policy' },
+  { label: 'Shipping & Returns', href: '/shipping&returns' },
+  { label: 'FAQs', href: '/faq' },
+]
 
 function FooterSection() {
   return (
@@ -25,22 +42,31 @@ function FooterSection() {
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(footerGroups).map(([groupName, links]) => (
-              <div key={groupName}>
-                <p className="section-eyebrow">{groupName}</p>
-                <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
-                  {links.map((link) => (
-                    <Link
-                      key={`${groupName}-${link.label}`}
-                      to={link.href}
-                      className="link-animated footer-link"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
+            <div>
+              <p className="section-eyebrow">SHOP</p>
+              <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
+                {shopLinks.map((link) => (
+                  <Link key={`SHOP-${link.label}`} to={link.href} className="link-animated footer-link">
+                    {link.label}
+                  </Link>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div>
+              <p className="section-eyebrow">QUICK LINKS</p>
+              <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
+                {quickLinks.map((link) => (
+                  <Link
+                    key={`QUICK-LINKS-${link.label}`}
+                    to={link.href}
+                    className="link-animated footer-link"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
 
             <div>
               <p className="section-eyebrow">CONTACT</p>

@@ -11,7 +11,11 @@ import HomePage from './pages/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import ProductPage from './pages/ProductPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
+import PrivacyPolicy from './pages/privacy-policy.jsx'
+import RefundPolicy from './pages/refund-policy.jsx'
 import ShopPage from './pages/ShopPage.jsx'
+import ShippingReturns from './pages/shipping&returns.jsx'
+import Terms from './pages/terms.jsx'
 import WishlistPage from './pages/WishlistPage.jsx'
 
 function App() {
@@ -27,6 +31,10 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/faq" element={<FaqPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/shipping&returns" element={<ShippingReturns />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/product/:slug" element={<ProductPage />} />
