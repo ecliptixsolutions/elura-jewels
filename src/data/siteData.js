@@ -4,6 +4,8 @@ import braceletTwo from '../assets/photos/bracelet-2.jpg'
 import braceletDisplay from '../assets/photos/bracelet-display.jpg'
 import categoryDisplay from '../assets/photos/category-display.jpg'
 import chokerSet from '../assets/photos/choker.jpeg'
+import chokerAngle from '../assets/photos/choker-angle.jpeg'
+import chokerClose from '../assets/photos/choker-close.jpeg'
 import earringsOne from '../assets/photos/earrings-1.jpg'
 import earringsTwo from '../assets/photos/earrings-2.jpg'
 import emeraldSet from '../assets/photos/emerald.jpeg'
@@ -21,6 +23,7 @@ import ringOne from '../assets/photos/ring-1.jpg'
 import ringTwo from '../assets/photos/ring-2.jpg'
 import rubySet from '../assets/photos/ruby.jpeg'
 
+
 export const formatCurrency = (price) =>
   new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -29,11 +32,10 @@ export const formatCurrency = (price) =>
   }).format(price)
 
 export const navigationItems = [
-  { label: 'Home', href: '/' },
   { label: 'Shop', href: '/shop' },
   { label: 'Collections', href: '/collections' },
-  { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact Us', href: '/contact' },
 ]
 
 export const heroSlides = [
@@ -199,7 +201,11 @@ export const products = [
       'Ideal for bridal, festive, and formal styling',
       'Wipe clean with a soft cloth after use',
     ],
-    images: [chokerSet, chokerSet, chokerSet],
+    images: [
+  chokerSet,
+  chokerAngle,
+  chokerClose,
+],
     reviews: [
       {
         name: 'Aisha K.',

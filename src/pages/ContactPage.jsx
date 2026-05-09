@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from 'lucide-react'
+import { Mail, MessageCircleMore, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { contactDetails } from '../data/siteData.js'
@@ -34,10 +34,10 @@ function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4 border-b border-black/8 pb-6">
-                <Phone className="mt-1 h-4 w-4 text-gold" />
+                <MessageCircleMore className="mt-1 h-4 w-4 text-gold" />
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                    Phone
+                    Whatsapp
                   </p>
                   <p className="mt-2 text-base">{contactDetails.phone}</p>
                 </div>

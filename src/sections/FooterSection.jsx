@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Mail, MessageCircleMore, MapPin } from 'lucide-react'
 import logoImage from '../assets/brand/elura-logo.svg'
 import { contactDetails } from '../data/siteData.js'
 
@@ -69,23 +70,35 @@ function FooterSection() {
             </div>
 
             <div>
-              <p className="section-eyebrow">CONTACT</p>
-              <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
-                <a
-                  href={`mailto:${contactDetails.email}`}
-                  className="link-animated footer-link"
-                >
-                  {contactDetails.email}
-                </a>
-                <a
-                  href={`tel:${contactDetails.phone.replace(/\s+/g, '')}`}
-                  className="link-animated footer-link"
-                >
-                  {contactDetails.phone}
-                </a>
-                <p>{contactDetails.location}</p>
-              </div>
-            </div>
+  <p className="section-eyebrow">CONTACT</p>
+
+  <div className="mt-4 flex flex-col gap-4 text-sm text-muted">
+    
+    <a
+      href={`mailto:${contactDetails.email}`}
+      className="flex items-start gap-3 link-animated footer-link"
+    >
+      <Mail className="mt-0.5 h-4 w-4 text-gold" />
+      <span>{contactDetails.email}</span>
+    </a>
+
+    <a
+  href={`tel:${contactDetails.phone.replace(/\s+/g, '')}`}
+  className="flex items-center gap-3 whitespace-nowrap link-animated footer-link"
+>
+  <MessageCircleMore className="mt-1 h-4 w-4 text-gold" />
+  <span className="whitespace-nowrap">{contactDetails.phone}</span>
+</a>
+
+    <div className="flex items-center gap-3 whitespace-nowrap">
+  <MapPin className="h-4 w-4 shrink-0 text-gold" />
+  <span className="whitespace-nowrap">
+    {contactDetails.location}
+  </span>
+</div>
+
+  </div>
+</div>
           </div>
         </div>
 
