@@ -1,21 +1,66 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+
+import {
+  doc,
+  onSnapshot,
+} from 'firebase/firestore'
+
+import { db } from '../lib/firebase'
+
 import Reveal from '../components/Reveal.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 
 function BrandStorySection({ story }) {
+  const [aboutMedia, setAboutMedia] =
+    useState(null)
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, 'cms', 'about'),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setAboutMedia(snapshot.data())
+        }
+      },
+    )
+
+    return () => unsubscribe()
+  }, [])
+
   return (
     <section className="section-spacing">
       <div className="section-shell">
+
         <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+
           <Reveal>
-            <img
-              src={story.image}
-              alt={story.title}
-              className="h-full min-h-[34rem] w-full rounded-[18px] object-cover"
-            />
+
+            <div className="overflow-hidden rounded-[18px]">
+
+              {aboutMedia?.type === 'video' ? (
+                <video
+                  src={aboutMedia?.url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="h-full min-h-[34rem] w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={aboutMedia?.url || story.image}
+                  alt={story.title}
+                  className="h-full min-h-[34rem] w-full object-cover"
+                />
+              )}
+
+            </div>
+
           </Reveal>
 
           <Reveal delay={120}>
+
             <SectionHeading
               eyebrow="About ELURA"
               title={story.title}
@@ -27,21 +72,31 @@ function BrandStorySection({ story }) {
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {story.features.map((feature, index) => (
-                <div
-                  key={`feature-${index}`}
-                  className="rounded-[16px] bg-white/55 px-5 py-4 text-sm text-muted"
-                >
-                  {feature}
-                </div>
-              ))}
+
+              {story.features.map(
+                (feature, index) => (
+                  <div
+                    key={index}
+                    className="rounded-[16px] bg-white/55 px-5 py-4 text-sm text-muted"
+                  >
+                    {feature}
+                  </div>
+                ),
+              )}
+
             </div>
 
-            <Link to="/about" className="line-link mt-8">
+            <Link
+              to="/about"
+              className="line-link mt-8"
+            >
               Learn More
             </Link>
+
           </Reveal>
+
         </div>
+
       </div>
     </section>
   )

@@ -31,6 +31,7 @@ function Header({ onCartOpen }) {
   }, [])
 
   const trimmedQuery = deferredQuery.trim().toLowerCase()
+
   const suggestions = !trimmedQuery
     ? []
     : products
@@ -57,15 +58,22 @@ function Header({ onCartOpen }) {
 
   return (
     <>
-      <header className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${headerClasses}`}>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${headerClasses}`}
+      >
         <div className="section-shell">
           <div className="navbar flex h-[60px] items-center justify-between gap-4 sm:h-[72px]">
-            <Link to="/" className="navbar-logo flex h-full items-center gap-2.5 py-1 pr-3 sm:gap-3">
+            
+            <Link
+              to="/"
+              className="navbar-logo flex h-full items-center gap-2.5 py-1 pr-3 sm:gap-3"
+            >
               <img
                 src={logoImage}
                 alt="ELURA Jewels"
                 className="logo block h-[40px] w-auto object-contain bg-transparent sm:h-[44px] lg:h-[52px]"
               />
+
               <span className="font-serif text-[15px] font-medium uppercase tracking-[0.1em] text-gold sm:text-[17px] lg:text-[21px]">
                 ELURA
               </span>
@@ -85,7 +93,9 @@ function Header({ onCartOpen }) {
               ))}
             </nav>
 
-            <div className="hidden items-center gap-2 sm:flex">
+            {/* UPDATED MOBILE + DESKTOP ICONS */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              
               <button
                 type="button"
                 onClick={() => {
@@ -97,6 +107,7 @@ function Header({ onCartOpen }) {
               >
                 <Search className="h-4 w-4" />
               </button>
+
               <Link
                 to={user ? '/wishlist' : '/login'}
                 state={
@@ -112,6 +123,7 @@ function Header({ onCartOpen }) {
               >
                 <div className="relative">
                   <Heart className="h-4 w-4" />
+
                   {wishlistIds.length > 0 && (
                     <span className="absolute -right-2.5 -top-2.5 inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-white">
                       {wishlistIds.length}
@@ -119,6 +131,7 @@ function Header({ onCartOpen }) {
                   )}
                 </div>
               </Link>
+
               <button
                 type="button"
                 onClick={onCartOpen}
@@ -127,6 +140,7 @@ function Header({ onCartOpen }) {
               >
                 <div className="relative">
                   <ShoppingBag className="h-4 w-4" />
+
                   {cartCount > 0 && (
                     <span className="absolute -right-2.5 -top-2.5 inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-white">
                       {cartCount}
@@ -134,6 +148,7 @@ function Header({ onCartOpen }) {
                   )}
                 </div>
               </button>
+
               <Link
                 to={user ? '/profile' : '/login'}
                 className="icon-button"
@@ -141,31 +156,39 @@ function Header({ onCartOpen }) {
               >
                 <UserRound className="h-4 w-4" />
               </Link>
+
+              {/* UPDATED MENU BUTTON */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen((current) => !current)}
+                className="icon-button lg:hidden"
+                aria-label="Toggle navigation"
+              >
+                {menuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setMenuOpen((current) => !current)}
-              className="icon-button lg:hidden"
-              aria-label="Toggle navigation"
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
-
         </div>
       </header>
 
       <div
         className={`fixed inset-0 z-[60] bg-[rgba(27,24,19,0.18)] backdrop-blur-[2px] transition duration-300 ${
-          searchOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+          searchOpen
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
         }`}
         onClick={() => setSearchOpen(false)}
       />
 
       <div
         className={`fixed left-1/2 top-4 z-[70] w-[calc(100%-2.5rem)] max-w-4xl -translate-x-1/2 transition duration-300 sm:top-6 sm:w-[calc(100%-3rem)] ${
-          searchOpen ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'
+          searchOpen
+            ? 'translate-y-0 opacity-100'
+            : '-translate-y-4 opacity-0 pointer-events-none'
         }`}
       >
         <form
@@ -181,7 +204,9 @@ function Header({ onCartOpen }) {
             aria-label="Search jewellery"
             autoFocus
           />
+
           <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+
           <button
             type="button"
             onClick={() => setSearchOpen(false)}
@@ -208,8 +233,12 @@ function Header({ onCartOpen }) {
                     alt={product.name}
                     className="h-16 w-14 rounded-[12px] object-cover"
                   />
+
                   <div>
-                    <p className="text-sm font-medium text-ink">{product.name}</p>
+                    <p className="text-sm font-medium text-ink">
+                      {product.name}
+                    </p>
+
                     <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted">
                       {product.category}
                     </p>
@@ -223,14 +252,18 @@ function Header({ onCartOpen }) {
 
       <div
         className={`fixed inset-0 z-[61] bg-black/30 transition lg:hidden ${
-          menuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+          menuOpen
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
         }`}
         onClick={() => setMenuOpen(false)}
       />
 
       <div
         className={`fixed inset-x-0 bottom-0 top-[60px] z-[62] overflow-y-auto bg-[rgba(248,246,242,0.985)] px-5 py-6 shadow-[0_20px_40px_rgba(27,24,19,0.08)] transition sm:top-[72px] sm:px-7 lg:hidden ${
-          menuOpen ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0 pointer-events-none'
+          menuOpen
+            ? 'translate-y-0 opacity-100'
+            : '-translate-y-3 opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex flex-col gap-4">
@@ -241,7 +274,9 @@ function Header({ onCartOpen }) {
                 to={item.href}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `nav-link block w-full py-3 leading-[1.65] ${isActive ? 'nav-link-active' : ''}`
+                  `nav-link block w-full py-3 leading-[1.65] ${
+                    isActive ? 'nav-link-active' : ''
+                  }`
                 }
               >
                 {item.label}
@@ -257,6 +292,7 @@ function Header({ onCartOpen }) {
                 placeholder="Search jewellery..."
                 className="search-shell text-sm"
               />
+
               <div className="flex flex-col gap-3">
                 <Link
                   to={user ? '/wishlist' : '/login'}
@@ -273,6 +309,7 @@ function Header({ onCartOpen }) {
                 >
                   Wishlist
                 </Link>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -283,6 +320,7 @@ function Header({ onCartOpen }) {
                 >
                   Cart
                 </button>
+
                 <Link
                   to={user ? '/profile' : '/login'}
                   onClick={() => setMenuOpen(false)}
