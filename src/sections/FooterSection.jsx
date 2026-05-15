@@ -83,13 +83,23 @@ function FooterSection() {
     </a>
 
     <a
-  href={`tel:${contactDetails.phone.replace(/\s+/g, '')}`}
-  className="flex items-center gap-3 whitespace-nowrap link-animated footer-link"
+  href="https://wa.me/447440482483"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group flex items-center gap-3 whitespace-nowrap transition hover:text-gold"
 >
-  <MessageCircleMore className="mt-1 h-4 w-4 text-gold" />
-  <span className="whitespace-nowrap">{contactDetails.phone}</span>
-</a>
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+    alt="WhatsApp"
+    className="h-5 w-5"
+  />
 
+  <span className="relative">
+  +44 7440482483
+
+  <span className="absolute bottom-[-2px] left-0 h-[1px] w-0 bg-gold transition-all duration-300 group-hover:w-full" />
+</span>
+</a>
     <div className="flex items-center gap-3 whitespace-nowrap">
   <MapPin className="h-4 w-4 shrink-0 text-gold" />
   <span className="whitespace-nowrap">
@@ -103,9 +113,14 @@ function FooterSection() {
         </div>
 
         <div className="mt-14 grid gap-3 border-t border-black/8 pt-6 text-[11px] uppercase leading-6 tracking-[0.12em] text-muted sm:grid-cols-2 sm:items-center sm:tracking-[0.18em]">
-          <p className="break-words text-center sm:justify-self-start sm:text-left">
-            Designed &amp; Developed by Ecliptix Solutions
-          </p>
+          <a
+  href="https://ecliptixsolutions.com/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="link-animated footer-link break-words text-center transition hover:text-gold sm:justify-self-start sm:text-left"
+>
+  Designed &amp; Developed by Ecliptix Solutions
+</a>
           <p className="break-words text-center sm:justify-self-end sm:text-right">
             &copy; 2026 ELURA Jewels. All rights reserved.
           </p>

@@ -1,4 +1,4 @@
-import { Mail, MessageCircleMore, MapPin } from 'lucide-react'
+import { Mail, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { contactDetails } from '../data/siteData.js'
@@ -34,14 +34,27 @@ function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4 border-b border-black/8 pb-6">
-                <MessageCircleMore className="mt-1 h-4 w-4 text-gold" />
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                    Whatsapp
-                  </p>
-                  <p className="mt-2 text-base">{contactDetails.phone}</p>
-                </div>
-              </div>
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+    alt="WhatsApp"
+    className="mt-1 h-4 w-4"
+  />
+
+  <div>
+    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted">
+      Whatsapp
+    </p>
+
+    <a
+      href="https://wa.me/447440482483"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 flex items-center whitespace-nowrap text-base transition hover:text-gold"
+    >
+      +44 7440482483
+    </a>
+  </div>
+</div>
               <div className="flex items-start gap-4 pb-2">
                 <MapPin className="mt-1 h-4 w-4 text-gold" />
                 <div>
