@@ -1,10 +1,28 @@
+import SEO from '../components/SEO.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
+import { breadcrumbSchema } from '../seo/structuredData.js'
+
 function PrivacyPolicyPage() {
   return (
     <div className="section-spacing">
+      <SEO
+        {...pageSeo.privacy}
+        canonicalPath="/privacy-policy"
+        structuredData={breadcrumbSchema([
+          {
+            name: 'Home',
+            path: '/',
+          },
+          {
+            name: 'Privacy Policy',
+            path: '/privacy-policy',
+          },
+        ])}
+      />
       <div className="section-shell">
         <div className="max-w-4xl mx-auto py-16 px-4">
           <h1 className="text-4xl font-semibold mb-6">Privacy Policy &ndash; ELURA Jewels</h1>
-          <p className="text-gray-600 leading-relaxed mb-3">Effective Date: [Add Date]</p>
+          <p className="text-gray-600 leading-relaxed mb-3">Effective Date: 23 May 2026</p>
           <p className="text-gray-600 leading-relaxed mb-3">
             At ELURA Jewels (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;), your privacy is
             extremely important to us. This Privacy Policy explains how we collect, use, and

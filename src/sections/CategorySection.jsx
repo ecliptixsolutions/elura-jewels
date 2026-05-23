@@ -11,15 +11,19 @@ import { db } from '../lib/firebase'
 import Reveal from '../components/Reveal.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 
-function CategorySection() {
-  const [cards, setCards] = useState([])
+function CategorySection({ cards: fallbackCards = [] }) {
+  const [cards, setCards] = useState(fallbackCards)
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
       doc(db, 'cms', 'collections'),
       (snapshot) => {
         if (snapshot.exists()) {
-          setCards(snapshot.data().items || [])
+          const cmsCards = snapshot.data().items || []
+
+          if (cmsCards.length) {
+            setCards(cmsCards)
+          }
         }
       },
     )
@@ -51,10 +55,14 @@ function CategorySection() {
 
               <div className="overflow-hidden rounded-[18px]">
 
-                {cards[0]?.type === 'image' ? (
+                {cards[0]?.type !== 'video' ? (
                   <img
-                    src={cards[0]?.url}
-                    alt=""
+                    src={cards[0]?.url || cards[0]?.image}
+                    alt={`${cards[0]?.title || 'Luxury jewellery collection'} by ELURA Jewels`}
+                    loading="lazy"
+                    decoding="async"
+                    width="880"
+                    height="680"
                     className="h-[34rem] w-full object-cover transition duration-700 group-hover:scale-[1.03]"
                   />
                 ) : (
@@ -98,10 +106,14 @@ function CategorySection() {
 
                   <div className="overflow-hidden rounded-[18px]">
 
-                    {card.type === 'image' ? (
+                    {card.type !== 'video' ? (
                       <img
-                        src={card.url}
-                        alt=""
+                        src={card.url || card.image}
+                        alt={`${card.title || 'Luxury jewellery collection'} by ELURA Jewels`}
+                        loading="lazy"
+                        decoding="async"
+                        width="640"
+                        height="360"
                         className="h-72 w-full object-cover transition duration-700 group-hover:scale-[1.03]"
                       />
                     ) : (

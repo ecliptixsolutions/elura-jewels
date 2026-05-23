@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react'
 
 import { auth } from '../lib/firebase'
 import { ADMIN_EMAILS } from '../config/adminEmails'
+import SEO from '../components/SEO.jsx'
 
 function AdminLoginPage() {
   const navigate = useNavigate()
@@ -54,7 +55,7 @@ function AdminLoginPage() {
       // SUCCESS LOGIN
       navigate('/admin')
 
-    } catch (err) {
+    } catch {
       setError('Invalid email or password')
     } finally {
       setLoading(false)
@@ -77,13 +78,19 @@ function AdminLoginPage() {
       setResetMessage(
         'Password reset email sent successfully. Please check your inbox.',
       )
-    } catch (err) {
+    } catch {
       setError('Unable to send password reset email')
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-linen px-5">
+      <SEO
+        title="Admin Login"
+        description="ELURA Jewels admin login."
+        canonicalPath="/admin-login"
+        robots="noindex,nofollow"
+      />
       <div className="w-full max-w-md rounded-[24px] bg-white p-10 shadow-[0_20px_60px_rgba(27,24,19,0.08)]">
 
         <p className="section-eyebrow">

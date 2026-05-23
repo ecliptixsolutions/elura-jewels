@@ -1,19 +1,36 @@
+import SEO from '../components/SEO.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
+import { breadcrumbSchema } from '../seo/structuredData.js'
+
 function TermsPage() {
   return (
     <div className="section-spacing">
+      <SEO
+        {...pageSeo.terms}
+        canonicalPath="/terms"
+        structuredData={breadcrumbSchema([
+          {
+            name: 'Home',
+            path: '/',
+          },
+          {
+            name: 'Terms and Conditions',
+            path: '/terms',
+          },
+        ])}
+      />
       <div className="section-shell">
         <div className="max-w-4xl mx-auto py-16 px-4">
           <h1 className="text-4xl font-semibold mb-6">
-            Terms &amp; Conditions – ELURA Jewels
+            Terms &amp; Conditions &ndash; ELURA Jewels
           </h1>
 
-          <p className="text-gray-600 leading-relaxed mb-3">
-            Effective Date: [Add Date]
-          </p>
+          <p className="text-gray-600 leading-relaxed mb-3">Effective Date: 23 May 2026</p>
 
           <h2 className="text-xl font-medium mt-8 mb-3">1. Introduction</h2>
           <p className="text-gray-600 leading-relaxed mb-3">
-            These Terms govern your use of ELURA Jewels. By using our website, you agree to comply with these terms.
+            These Terms govern your use of ELURA Jewels. By using our website, you agree to
+            comply with these terms.
           </p>
 
           <h2 className="text-xl font-medium mt-8 mb-3">2. Eligibility</h2>
@@ -32,7 +49,7 @@ function TermsPage() {
 
           <h2 className="text-xl font-medium mt-8 mb-3">4. Pricing &amp; Currency</h2>
           <ul className="list-disc pl-5 text-gray-600 mb-3">
-            <li>All prices are in GBP (£)</li>
+            <li>All prices are in GBP (&pound;)</li>
             <li>Prices may change without notice</li>
             <li>Taxes and shipping are calculated at checkout</li>
           </ul>
@@ -46,7 +63,8 @@ function TermsPage() {
 
           <h2 className="text-xl font-medium mt-8 mb-3">6. Payments</h2>
           <p className="text-gray-600 leading-relaxed mb-3">
-            Payments are processed securely via third-party gateways (Shopify Payments, etc.). We do not store payment details.
+            Payments are processed securely via third-party gateways such as Shopify Payments.
+            We do not store payment details.
           </p>
 
           <h2 className="text-xl font-medium mt-8 mb-3">7. Shipping</h2>
@@ -61,7 +79,8 @@ function TermsPage() {
 
           <h2 className="text-xl font-medium mt-8 mb-3">9. Intellectual Property</h2>
           <p className="text-gray-600 leading-relaxed mb-3">
-            All content on this website (logos, images, text) is owned by ELURA Jewels and protected by copyright laws.
+            All content on this website, including logos, images, and text, is owned by ELURA
+            Jewels and protected by copyright laws.
           </p>
 
           <h2 className="text-xl font-medium mt-8 mb-3">10. Prohibited Use</h2>
@@ -73,7 +92,8 @@ function TermsPage() {
 
           <h2 className="text-xl font-medium mt-8 mb-3">11. Limitation of Liability</h2>
           <p className="text-gray-600 leading-relaxed mb-3">
-            We are not responsible for indirect or consequential losses, or delays caused by third parties.
+            We are not responsible for indirect or consequential losses, or delays caused by third
+            parties.
           </p>
 
           <h2 className="text-xl font-medium mt-8 mb-3">12. Governing Law</h2>
@@ -88,7 +108,7 @@ function TermsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default TermsPage;
+export default TermsPage

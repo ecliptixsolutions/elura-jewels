@@ -10,18 +10,25 @@ const SHOPIFY_PRODUCTS_QUERY = `
           id
           title
           handle
-          images(first: 1) {
+          description
+          productType
+          availableForSale
+          images(first: 3) {
             edges {
               node {
                 url
+                altText
               }
             }
           }
           variants(first: 1) {
             edges {
               node {
+                sku
+                availableForSale
                 price {
                   amount
+                  currencyCode
                 }
               }
             }

@@ -1,18 +1,42 @@
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { faqItems } from '../data/siteData.js'
+import { pageSeo } from '../seo/seoConfig.js'
+import {
+  breadcrumbSchema,
+  faqSchema,
+} from '../seo/structuredData.js'
 
 function FaqPage() {
   const [openIndex, setOpenIndex] = useState(0)
 
   return (
     <div className="section-spacing">
+      <SEO
+        {...pageSeo.faq}
+        canonicalPath="/faq"
+        structuredData={[
+          faqSchema(faqItems),
+          breadcrumbSchema([
+            {
+              name: 'Home',
+              path: '/',
+            },
+            {
+              name: 'FAQs',
+              path: '/faq',
+            },
+          ]),
+        ]}
+      />
       <div className="section-shell max-w-4xl">
         <SectionHeading
           eyebrow="FAQs"
           title="Answers to common questions"
           description="Everything from shipping and returns to care guidance and gifting presentation."
+          as="h1"
         />
 
         <div className="space-y-1">

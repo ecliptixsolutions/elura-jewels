@@ -1,58 +1,102 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+// FILE: src/App.jsx
+
+import {
+  lazy,
+  Suspense,
+} from 'react'
+import { HelmetProvider } from 'react-helmet-async'
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom'
 
 import SiteLayout from './components/SiteLayout.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute'
+import PageLoader from './components/PageLoader.jsx'
+import AppErrorBoundary from './components/AppErrorBoundary.jsx'
 
-import { StoreProvider } from './context/StoreContext.jsx'
+import {
+  StoreProvider,
+} from './context/StoreContext.jsx'
 
-import AboutPage from './pages/AboutPage.jsx'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminLoginPage from './pages/AdminLoginPage'
-import AdminBannersPage from './pages/AdminBannersPage'
-import AuthPage from './pages/AuthPage.jsx'
-import CheckoutPage from './pages/CheckoutPage.jsx'
-import CollectionsPage from './pages/CollectionsPage.jsx'
-import ContactPage from './pages/ContactPage.jsx'
-import FaqPage from './pages/FaqPage.jsx'
-import HomePage from './pages/HomePage.jsx'
-import NotFoundPage from './pages/NotFoundPage.jsx'
-import PrivacyPolicy from './pages/privacy-policy.jsx'
-import ProductPage from './pages/ProductPage.jsx'
-import ProfilePage from './pages/ProfilePage.jsx'
-import RefundPolicy from './pages/refund-policy.jsx'
-import ShippingReturns from './pages/shipping&returns.jsx'
-import ShopPage from './pages/ShopPage.jsx'
-import Terms from './pages/terms.jsx'
-import WishlistPage from './pages/WishlistPage.jsx'
-import AdminCollectionsPage from './pages/AdminCollectionsPage'
-import AdminAboutPage from './pages/AdminAboutPage'
-import AdminCTAPage from './pages/AdminCTAPage'
+import {
+  PageLoaderProvider,
+} from './context/PageLoaderContext.jsx'
 
-function App() {
+const AboutPage = lazy(() => import('./pages/AboutPage.jsx'))
+const AdminAboutPage = lazy(() => import('./pages/AdminAboutPage'))
+const AdminBannersPage = lazy(() => import('./pages/AdminBannersPage'))
+const AdminCollectionsPage = lazy(() => import('./pages/AdminCollectionsPage'))
+const AdminCTAPage = lazy(() => import('./pages/AdminCTAPage'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
+const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'))
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage.jsx'))
+const ContactPage = lazy(() => import('./pages/ContactPage.jsx'))
+const FaqPage = lazy(() => import('./pages/FaqPage.jsx'))
+const HomePage = lazy(() => import('./pages/HomePage.jsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
+const PrivacyPolicy = lazy(() => import('./pages/privacy-policy.jsx'))
+const ProductPage = lazy(() => import('./pages/ProductPage.jsx'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
+const RefundPolicy = lazy(() => import('./pages/refund-policy.jsx'))
+const ShippingReturns = lazy(() => import('./pages/shipping&returns.jsx'))
+const ShopPage = lazy(() => import('./pages/ShopPage.jsx'))
+const Terms = lazy(() => import('./pages/terms.jsx'))
+const WishlistPage = lazy(() => import('./pages/WishlistPage.jsx'))
+
+function AppRoutes() {
+  const location = useLocation()
+  const resetKey = `${location.pathname}${location.search}`
+
   return (
-    <StoreProvider>
-      <BrowserRouter>
+    <AppErrorBoundary resetKey={resetKey}>
+
+      <Suspense fallback={<PageLoader />}>
+
         <Routes>
 
           {/* MAIN WEBSITE */}
           <Route element={<SiteLayout />}>
 
-            <Route index element={<HomePage />} />
+            <Route
+              index
+              element={<HomePage />}
+            />
 
-            <Route path="/shop" element={<ShopPage />} />
+            <Route
+              path="/shop"
+              element={<ShopPage />}
+            />
 
             <Route
               path="/collections"
               element={<CollectionsPage />}
             />
 
-            <Route path="/about" element={<AboutPage />} />
+            <Route
+              path="/about"
+              element={<AboutPage />}
+            />
 
-            <Route path="/contact" element={<ContactPage />} />
+            <Route
+              path="/contact"
+              element={<ContactPage />}
+            />
 
-            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route
+              path="/checkout"
+              element={<CheckoutPage />}
+            />
 
-            <Route path="/faq" element={<FaqPage />} />
+            <Route
+              path="/faq"
+              element={<FaqPage />}
+            />
 
             <Route
               path="/privacy-policy"
@@ -105,7 +149,7 @@ function App() {
               element={<AdminLoginPage />}
             />
 
-            {/* PROTECTED ADMIN DASHBOARD */}
+            {/* ADMIN DASHBOARD */}
             <Route
               path="/admin"
               element={
@@ -115,7 +159,7 @@ function App() {
               }
             />
 
-            {/* ADMIN BANNERS PAGE */}
+            {/* ADMIN BANNERS */}
             <Route
               path="/admin/banners"
               element={
@@ -124,36 +168,45 @@ function App() {
                 </ProtectedAdminRoute>
               }
             />
+
+            {/* ADMIN COLLECTIONS */}
             <Route
-  path="/admin/collections"
-  element={
-    <ProtectedAdminRoute>
-      <AdminCollectionsPage />
-    </ProtectedAdminRoute>
-  }
-/>
+              path="/admin/collections"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminCollectionsPage />
+                </ProtectedAdminRoute>
+              }
+            />
 
-<Route
-  path="/admin/about"
-  element={
-    <ProtectedAdminRoute>
-      <AdminAboutPage />
-    </ProtectedAdminRoute>
-  }
-/>
+            {/* ADMIN ABOUT */}
+            <Route
+              path="/admin/about"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminAboutPage />
+                </ProtectedAdminRoute>
+              }
+            />
 
-<Route
-  path="/admin/cta"
-  element={
-    <ProtectedAdminRoute>
-      <AdminCTAPage />
-    </ProtectedAdminRoute>
-  }
-/>
+            {/* ADMIN CTA */}
+            <Route
+              path="/admin/cta"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminCTAPage />
+                </ProtectedAdminRoute>
+              }
+            />
 
             <Route
               path="/home"
-              element={<Navigate to="/" replace />}
+              element={
+                <Navigate
+                  to="/"
+                  replace
+                />
+              }
             />
 
             <Route
@@ -162,9 +215,36 @@ function App() {
             />
 
           </Route>
+
         </Routes>
-      </BrowserRouter>
-    </StoreProvider>
+
+      </Suspense>
+
+    </AppErrorBoundary>
+  )
+}
+
+function App() {
+
+  return (
+
+    <HelmetProvider>
+
+      <StoreProvider>
+
+        <PageLoaderProvider>
+
+          <BrowserRouter>
+
+            <AppRoutes />
+
+          </BrowserRouter>
+
+        </PageLoaderProvider>
+
+      </StoreProvider>
+
+    </HelmetProvider>
   )
 }
 

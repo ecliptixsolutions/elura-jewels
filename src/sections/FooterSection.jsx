@@ -30,6 +30,10 @@ function FooterSection() {
               <img
                 src={logoImage}
                 alt="ELURA Jewels"
+                loading="lazy"
+                decoding="async"
+                width="160"
+                height="80"
                 className="footer-logo h-14 w-auto object-contain bg-transparent sm:h-16"
               />
               <span className="font-serif text-[19px] uppercase tracking-[0.12em] text-gold sm:text-[21px]">
@@ -91,6 +95,10 @@ function FooterSection() {
   <img
     src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
     alt="WhatsApp"
+    loading="lazy"
+    decoding="async"
+    width="20"
+    height="20"
     className="h-5 w-5"
   />
 

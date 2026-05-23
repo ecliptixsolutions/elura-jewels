@@ -1,7 +1,13 @@
 import { Mail, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { contactDetails } from '../data/siteData.js'
+import { pageSeo } from '../seo/seoConfig.js'
+import {
+  breadcrumbSchema,
+  jewelryStoreSchema,
+} from '../seo/structuredData.js'
 
 function ContactPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +20,23 @@ function ContactPage() {
 
   return (
     <div className="section-spacing">
+      <SEO
+        {...pageSeo.contact}
+        canonicalPath="/contact"
+        structuredData={[
+          jewelryStoreSchema('/contact'),
+          breadcrumbSchema([
+            {
+              name: 'Home',
+              path: '/',
+            },
+            {
+              name: 'Contact',
+              path: '/contact',
+            },
+          ]),
+        ]}
+      />
       <div className="section-shell">
         <div className="grid gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:gap-20">
           <div>
@@ -21,6 +44,7 @@ function ContactPage() {
               eyebrow="Contact"
               title="Get in touch with ELURA"
               description="For product questions, returns, delivery updates, or general support, send us a message and we'll reply by email."
+              as="h1"
             />
 
             <div className="mt-8 space-y-6">
@@ -37,6 +61,10 @@ function ContactPage() {
   <img
     src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
     alt="WhatsApp"
+    loading="lazy"
+    decoding="async"
+    width="16"
+    height="16"
     className="mt-1 h-4 w-4"
   />
 

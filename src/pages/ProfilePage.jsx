@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { formatCurrency } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
 
 function ProfilePage() {
   const { orders, user, wishlistProducts, logout } = useStore()
@@ -9,12 +11,14 @@ function ProfilePage() {
   if (!user) {
     return (
       <div className="section-spacing">
+        <SEO {...pageSeo.profile} canonicalPath="/profile" />
         <div className="section-shell max-w-3xl text-center">
           <SectionHeading
             eyebrow="Profile"
             title="Sign in to view your account"
             description="Access order history, saved pieces, and your account details."
             align="center"
+            as="h1"
           />
           <div className="flex justify-center gap-3">
             <Link to="/login" className="btn-primary">
@@ -31,12 +35,14 @@ function ProfilePage() {
 
   return (
     <div className="section-spacing">
+      <SEO {...pageSeo.profile} canonicalPath="/profile" />
       <div className="section-shell">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeading
             eyebrow="Profile"
             title={`Welcome, ${user.name}`}
             description="Manage account details, review past orders, and revisit favourite pieces."
+            as="h1"
           />
           <button type="button" onClick={logout} className="line-link self-start">
             Log Out

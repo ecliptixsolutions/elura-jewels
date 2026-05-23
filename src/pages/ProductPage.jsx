@@ -2,9 +2,14 @@ import { Minus, Plus, Star } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { formatCurrency } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
+import {
+  breadcrumbSchema,
+  productSchema,
+} from '../seo/structuredData.js'
 
 function ProductPage() {
   const { slug } = useParams()
@@ -14,11 +19,18 @@ function ProductPage() {
   if (!product && isProductsLoading) {
     return (
       <div className="section-spacing">
+        <SEO
+          title="Loading Luxury Jewellery Product"
+          description="Fetching the latest ELURA Jewels luxury jewellery product details."
+          canonicalPath={`/product/${slug}`}
+          robots="noindex,follow"
+        />
         <div className="section-shell">
           <SectionHeading
             eyebrow="Product"
             title="Loading product"
             description="Fetching the latest product details from ELURA."
+            as="h1"
           />
         </div>
       </div>
@@ -28,11 +40,18 @@ function ProductPage() {
   if (!product) {
     return (
       <div className="section-spacing">
+        <SEO
+          title="Luxury Jewellery Product Not Found"
+          description="This ELURA Jewels product is not available. Return to the shop to browse luxury jewellery in the UK."
+          canonicalPath="/shop"
+          robots="noindex,follow"
+        />
         <div className="section-shell">
           <SectionHeading
             eyebrow="Product"
             title="This product could not be found"
             description="Please return to the shop and continue browsing the collection."
+            as="h1"
           />
           <Link to="/shop" className="btn-primary">
             Back to Shop
@@ -52,9 +71,57 @@ function ProductPage() {
 function ProductPageDetail({ product, addToCart, relatedProducts }) {
   const [selectedImage, setSelectedImage] = useState(product.images[0])
   const [quantity, setQuantity] = useState(1)
+  const reviewCount = product.reviews?.length ?? 0
+  const averageRating = reviewCount
+    ? (
+        product.reviews.reduce((total, review) => total + Number(review.rating || 0), 0) /
+        reviewCount
+      ).toFixed(1)
+    : null
+  const productSeoTitle = `${product.name} | Luxury ${product.category} Jewellery UK`
+  const productSeoDescription = `${product.description} Shop ${product.name} from ELURA Jewels with premium UK delivery, refined gifting presentation, and elegant luxury jewellery styling.`
+  const sku =
+    product.sku ||
+    `ELURA-${String(product.id).replace(/[^a-z0-9-]/gi, '').toUpperCase()}`
+  const availability = product.availableForSale === false ? 'Out of stock' : 'In stock'
+  const currency = product.currencyCode || 'GBP'
 
   return (
     <div className="section-spacing">
+      <SEO
+        title={productSeoTitle}
+        description={productSeoDescription}
+        keywords={[
+          product.name,
+          `luxury ${product.category.toLowerCase()} uk`,
+          'luxury jewellery uk',
+          'designer jewellery uk',
+          'premium jewellery uk',
+          'gold jewellery london',
+          'bridal jewellery uk',
+        ]}
+        image={product.images[0]}
+        type="product"
+        canonicalPath={`/product/${product.slug}`}
+        preloadImages={[product.images[0]]}
+        structuredData={[
+          productSchema(product),
+          breadcrumbSchema([
+            {
+              name: 'Home',
+              path: '/',
+            },
+            {
+              name: 'Shop',
+              path: '/shop',
+            },
+            {
+              name: product.name,
+              path: `/product/${product.slug}`,
+            },
+          ]),
+        ]}
+      />
       <div className="section-shell">
         <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr]">
           <section className="grid gap-4 lg:grid-cols-[6.5rem_1fr]">
@@ -72,7 +139,9 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
                 >
                   <img
                     src={image}
-                    alt={product.name}
+                    alt={`${product.name} luxury ${product.category.toLowerCase()} detail ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     className="h-24 w-20 rounded-[14px] object-cover"
                   />
                 </button>
@@ -82,7 +151,11 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
               <div className="group relative overflow-hidden">
                 <img
                   src={selectedImage}
-                  alt={product.name}
+                  alt={`${product.name} luxury ${product.category.toLowerCase()} by ELURA Jewels`}
+                  fetchPriority={selectedImage === product.images[0] ? 'high' : 'auto'}
+                  decoding="async"
+                  width="920"
+                  height="760"
                   className="h-[24rem] w-full object-contain bg-linen/35 transition duration-700 group-hover:scale-105 sm:h-[32rem] sm:object-cover lg:h-[38rem]"
                 />
               </div>
@@ -95,6 +168,15 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
             <p className="mt-4 text-2xl font-semibold text-ink">
               {formatCurrency(product.price)}
             </p>
+            <p className="mt-3 text-xs uppercase tracking-[0.24em] text-muted">
+              SKU {sku} &middot; {availability} &middot; {currency}
+            </p>
+            {averageRating ? (
+              <p className="mt-3 text-sm text-muted">
+                Rated {averageRating}/5 from {reviewCount} customer review
+                {reviewCount === 1 ? '' : 's'}.
+              </p>
+            ) : null}
             <p className="mt-6 text-base text-muted sm:text-lg">{product.description}</p>
 
             <div className="mt-8 space-y-6 border-t border-black/8 pt-7">

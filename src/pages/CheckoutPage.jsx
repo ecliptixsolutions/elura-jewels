@@ -1,8 +1,10 @@
 import { Navigate, Link } from 'react-router-dom'
 import { useState } from 'react'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { formatCurrency } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
 
 function CheckoutPage() {
   const { cartItems, cartSubtotal, clearCart, user } = useStore()
@@ -30,12 +32,14 @@ function CheckoutPage() {
   if (submitted) {
     return (
       <div className="section-spacing">
+        <SEO {...pageSeo.checkout} canonicalPath="/checkout" />
         <div className="section-shell max-w-3xl text-center">
           <SectionHeading
             eyebrow="Checkout"
             title="Your order has been prepared"
             description="Thank you for shopping with ELURA. A confirmation email will follow shortly."
             align="center"
+            as="h1"
           />
           <Link to="/shop" className="btn-primary">
             Continue Shopping
@@ -47,11 +51,13 @@ function CheckoutPage() {
 
   return (
     <div className="section-spacing">
+      <SEO {...pageSeo.checkout} canonicalPath="/checkout" />
       <div className="section-shell">
         <SectionHeading
           eyebrow="Checkout"
           title="Complete your order"
           description="Enter your delivery details and review the order summary before placing your ELURA order."
+          as="h1"
         />
 
         {cartItems.length === 0 ? (
@@ -143,7 +149,11 @@ function CheckoutPage() {
                   <article key={item.id} className="flex items-start gap-4">
                     <img
                       src={item.images[0]}
-                      alt={item.name}
+                      alt={`${item.name} luxury jewellery order summary`}
+                      loading="lazy"
+                      decoding="async"
+                      width="80"
+                      height="96"
                       className="h-24 w-20 rounded-[14px] object-cover"
                     />
                     <div className="flex-1">

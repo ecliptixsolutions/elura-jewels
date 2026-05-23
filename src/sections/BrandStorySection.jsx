@@ -50,7 +50,11 @@ function BrandStorySection({ story }) {
               ) : (
                 <img
                   src={aboutMedia?.url || story.image}
-                  alt={story.title}
+                  alt={`${story.title} at ELURA Jewels UK`}
+                  loading="lazy"
+                  decoding="async"
+                  width="720"
+                  height="900"
                   className="h-full min-h-[34rem] w-full object-cover"
                 />
               )}

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /checkout
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /login
+Disallow: /signup
+Disallow: /shop?q=
+
+Sitemap: https://www.elurajewels.co.uk/sitemap.xml
+Sitemap: https://www.elurajewels.com/sitemap.xml

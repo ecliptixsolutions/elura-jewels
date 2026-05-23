@@ -71,6 +71,11 @@ function Header({ onCartOpen }) {
               <img
                 src={logoImage}
                 alt="ELURA Jewels"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                width="160"
+                height="80"
                 className="logo block h-[40px] w-auto object-contain bg-transparent sm:h-[44px] lg:h-[52px]"
               />
 
@@ -230,7 +235,11 @@ function Header({ onCartOpen }) {
                 >
                   <img
                     src={product.images[0]}
-                    alt={product.name}
+                    alt={`${product.name} luxury jewellery search result`}
+                    loading="lazy"
+                    decoding="async"
+                    width="56"
+                    height="64"
                     className="h-16 w-14 rounded-[12px] object-cover"
                   />
 

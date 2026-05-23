@@ -1,7 +1,9 @@
 import { Link, Navigate } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { useStore } from '../context/StoreContext.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
 
 function WishlistPage() {
   const { user, wishlistProducts } = useStore()
@@ -21,11 +23,13 @@ function WishlistPage() {
 
   return (
     <div className="section-spacing">
+      <SEO {...pageSeo.wishlist} canonicalPath="/wishlist" />
       <div className="section-shell">
         <SectionHeading
           eyebrow="Wishlist"
           title="Saved pieces"
           description="Keep track of favourite ELURA pieces and return when you are ready."
+          as="h1"
         />
 
         {wishlistProducts.length === 0 ? (

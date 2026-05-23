@@ -7,6 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 
 import { ADMIN_EMAILS } from '../config/adminEmails'
+import SEO from './SEO.jsx'
 
 function ProtectedAdminRoute({ children }) {
   const [loading, setLoading] =
@@ -32,6 +33,12 @@ function ProtectedAdminRoute({ children }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
+        <SEO
+          title="Admin"
+          description="ELURA Jewels admin area."
+          canonicalPath="/admin"
+          robots="noindex,nofollow"
+        />
         Loading...
       </div>
     )
@@ -62,7 +69,17 @@ function ProtectedAdminRoute({ children }) {
   }
 
   // ACCESS GRANTED
-  return children
+  return (
+    <>
+      <SEO
+        title="Admin"
+        description="ELURA Jewels admin area."
+        canonicalPath="/admin"
+        robots="noindex,nofollow"
+      />
+      {children}
+    </>
+  )
 }
 
 export default ProtectedAdminRoute

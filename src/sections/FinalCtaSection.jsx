@@ -14,9 +14,9 @@ import { db } from '../lib/firebase'
 
 import Reveal from '../components/Reveal.jsx'
 
-function FinalCtaSection() {
+function FinalCtaSection({ banners: fallbackBanners = [] }) {
   const [banners, setBanners] =
-    useState([])
+    useState(fallbackBanners)
 
   const [rotationEnabled, setRotationEnabled] =
     useState(false)
@@ -40,9 +40,11 @@ function FinalCtaSection() {
               false,
           )
 
-          setBanners(
-            data.banners || [],
-          )
+          if (data.banners?.length) {
+            setBanners(
+              data.banners,
+            )
+          }
         }
       },
     )
@@ -170,9 +172,13 @@ function FinalCtaSection() {
                         ) : (
                           <img
                             src={
-                              banner.url
+                              banner.url || banner.image
                             }
-                            alt=""
+                            alt={`${banner.heading || 'Luxury jewellery'} by ELURA Jewels`}
+                            loading="lazy"
+                            decoding="async"
+                            width="720"
+                            height="580"
                             className={`h-full w-full object-cover transition-transform duration-[5000ms] ${
                               isActive
                                 ? 'scale-105'

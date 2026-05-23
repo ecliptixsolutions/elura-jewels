@@ -53,8 +53,8 @@ const inferCategory = (fallbackProduct, handle, title) => {
   return 'Necklaces'
 }
 
-const buildImages = (primaryImage, fallbackImages = []) => {
-  const images = [primaryImage, ...fallbackImages].filter(Boolean)
+const buildImages = (shopifyImages = [], fallbackImages = []) => {
+  const images = [...shopifyImages, ...fallbackImages].filter(Boolean)
 
   while (images.length < 3) {
     images.push(images[images.length - 1] ?? '')
@@ -69,22 +69,28 @@ const mapShopifyProduct = (node) => {
       item.slug === node.handle ||
       normalizeValue(item.name) === normalizeValue(node.title),
   )
-  const primaryImage = node.images?.edges?.[0]?.node?.url ?? fallbackProduct?.images?.[0] ?? ''
-  const amount = node.variants?.edges?.[0]?.node?.price?.amount
+  const shopifyImages =
+    node.images?.edges?.map((edge) => edge.node?.url).filter(Boolean) ?? []
+  const variant = node.variants?.edges?.[0]?.node
+  const amount = variant?.price?.amount
   const price = Number.parseFloat(amount ?? fallbackProduct?.price ?? 0)
 
   return {
     id: fallbackProduct?.id ?? node.id,
     slug: node.handle ?? fallbackProduct?.slug ?? normalizeValue(node.title),
     name: node.title ?? fallbackProduct?.name ?? 'ELURA Product',
-    category: inferCategory(fallbackProduct, node.handle ?? '', node.title ?? ''),
+    category: node.productType || inferCategory(fallbackProduct, node.handle ?? '', node.title ?? ''),
     price: Number.isNaN(price) ? 0 : price,
+    currencyCode: variant?.price?.currencyCode ?? 'GBP',
+    sku: variant?.sku || fallbackProduct?.sku || '',
+    availableForSale: node.availableForSale ?? variant?.availableForSale ?? true,
     description:
-      fallbackProduct?.description ??
+      node.description ||
+      fallbackProduct?.description ||
       'Selected from the ELURA collection with premium finishing and refined detail.',
     materials: fallbackProduct?.materials ?? ['Material details available on request'],
     details: fallbackProduct?.details ?? ['Presented in ELURA packaging'],
-    images: buildImages(primaryImage, fallbackProduct?.images?.slice(1)),
+    images: buildImages(shopifyImages, fallbackProduct?.images),
     reviews: fallbackProduct?.reviews ?? [],
   }
 }

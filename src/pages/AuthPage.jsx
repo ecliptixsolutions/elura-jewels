@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import SEO from '../components/SEO.jsx'
 import logoImage from '../assets/brand/elura-logo.svg'
 import { useStore } from '../context/StoreContext.jsx'
+import { pageSeo } from '../seo/seoConfig.js'
 
 function AuthPage({ mode = 'login' }) {
   const location = useLocation()
@@ -106,6 +108,10 @@ function AuthPage({ mode = 'login' }) {
 
   return (
     <div className="section-spacing">
+      <SEO
+        {...(isLogin ? pageSeo.login : pageSeo.signup)}
+        canonicalPath={isLogin ? '/login' : '/signup'}
+      />
       <div className="section-shell max-w-5xl">
         <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
           <div className="flex flex-col justify-between rounded-[18px] bg-white/45 p-8 sm:p-12">

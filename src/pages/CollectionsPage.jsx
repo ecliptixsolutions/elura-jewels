@@ -1,18 +1,46 @@
 import { Link } from 'react-router-dom'
+import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { useStore } from '../context/StoreContext.jsx'
 import { collectionCards } from '../data/siteData.js'
+import { pageSeo } from '../seo/seoConfig.js'
+import {
+  breadcrumbSchema,
+  collectionSchema,
+} from '../seo/structuredData.js'
 
 function CollectionsPage() {
   const { homeFeaturedProducts } = useStore()
 
   return (
     <div className="section-spacing">
+      <SEO
+        {...pageSeo.collections}
+        canonicalPath="/collections"
+        structuredData={[
+          breadcrumbSchema([
+            {
+              name: 'Home',
+              path: '/',
+            },
+            {
+              name: 'Collections',
+              path: '/collections',
+            },
+          ]),
+          collectionSchema(
+            'Luxury Jewellery Collections UK',
+            pageSeo.collections.description,
+            homeFeaturedProducts,
+          ),
+        ]}
+      />
       <div className="section-shell">
         <SectionHeading
           eyebrow="Collections"
           title="Curated categories with a cleaner route into product discovery"
           description="Explore ELURA by category, then move directly into product pages built for easier browsing and clearer detail."
+          as="h1"
         />
 
         <div className="grid items-start gap-6 lg:grid-cols-2">
@@ -28,7 +56,12 @@ function CollectionsPage() {
             >
               <img
                 src={card.image}
-                alt={card.title}
+                alt={`${card.title} luxury jewellery collection by ELURA Jewels`}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                decoding="async"
+                width="720"
+                height="900"
                 className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
               />
 
@@ -61,7 +94,11 @@ function CollectionsPage() {
               >
                 <img
                   src={product.images[0]}
-                  alt={product.name}
+                  alt={`${product.name} luxury ${product.category.toLowerCase()} from ELURA Jewels`}
+                  loading="lazy"
+                  decoding="async"
+                  width="480"
+                  height="600"
                   className="aspect-[4/5] w-full object-cover"
                 />
 
