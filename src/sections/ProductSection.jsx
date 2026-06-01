@@ -20,7 +20,7 @@ function ProductSection({ products }) {
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {products.map((product, index) => (
-            <Reveal key={product.id} delay={index * 70}>
+            <Reveal key={`${product.id}-${product.slug || index}`} delay={index * 70}>
               <ProductCard product={product} />
             </Reveal>
           ))}

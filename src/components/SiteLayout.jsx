@@ -1,6 +1,6 @@
 // FILE: src/components/SiteLayout.jsx
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Outlet,
@@ -19,6 +19,17 @@ import CartDrawer from './CartDrawer.jsx'
 import Header from './Header.jsx'
 import WhatsAppButton from './WhatsAppButton.jsx'
 import FooterSection from '../sections/FooterSection.jsx'
+import NewsletterPopup from './NewsletterPopup.jsx'
+import SocialProofNotification from './SocialProofNotification.jsx'
+import { subscribeCmsDoc } from '../lib/cms.js'
+
+const announcementFallback = {
+  enabled: false,
+  message: '',
+  backgroundColor: '#1B1813',
+  textColor: '#F8F6F2',
+  linkUrl: '',
+}
 
 function ScrollToTop() {
 
@@ -57,6 +68,18 @@ function SiteLayout() {
   const {
     isPageLoading,
   } = usePageLoader()
+  const [announcement, setAnnouncement] = useState(announcementFallback)
+  const showAnnouncement = Boolean(announcement.enabled && announcement.message?.trim())
+
+  useEffect(() => {
+    const unsubscribe = subscribeCmsDoc(
+      'announcement',
+      announcementFallback,
+      setAnnouncement,
+    )
+
+    return unsubscribe
+  }, [])
 
   return (
 
@@ -68,6 +91,7 @@ function SiteLayout() {
         <Header
           key={`${location.pathname}${location.search}`}
           onCartOpen={openCart}
+          announcement={announcement}
         />
       )}
 
@@ -75,7 +99,9 @@ function SiteLayout() {
         className={
           isPageLoading
             ? ''
-            : 'pt-[72px] sm:pt-[84px]'
+            : showAnnouncement
+              ? 'pt-[106px] sm:pt-[118px]'
+              : 'pt-[72px] sm:pt-[84px]'
         }
       >
 
@@ -99,6 +125,14 @@ function SiteLayout() {
 
       {!isPageLoading && (
         <WhatsAppButton />
+      )}
+
+      {!isPageLoading && (
+        <NewsletterPopup />
+      )}
+
+      {!isPageLoading && (
+        <SocialProofNotification />
       )}
 
     </div>

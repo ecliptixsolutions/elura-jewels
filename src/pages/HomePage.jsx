@@ -107,20 +107,32 @@ function HomePage() {
                   url:
                     item.url,
 
+                  image:
+                    item.url,
+
+                  video:
+                    item.video || (item.type === 'video' ? item.url : ''),
+
                   heading:
                     item.heading || '',
 
                   subtext:
-                    item.subtext || '',
+                    item.subtext || item.description || '',
 
                   label:
                     item.label || '',
 
                   ctaLabel:
-                    item.ctaLabel || '',
+                    item.ctaLabel || item.buttonText || '',
 
                   ctaHref:
-                    item.ctaHref || '',
+                    item.ctaHref || item.buttonLink || '',
+
+                  overlayStrength:
+                    item.overlayStrength ?? 28,
+
+                  textAlignment:
+                    item.textAlignment || 'left',
                 }),
               )
 

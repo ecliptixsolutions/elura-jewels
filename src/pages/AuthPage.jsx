@@ -5,13 +5,52 @@ import logoImage from '../assets/brand/elura-logo.svg'
 import { useStore } from '../context/StoreContext.jsx'
 import { pageSeo } from '../seo/seoConfig.js'
 
+const getAuthErrorMessage = (error) => {
+  const message = String(error?.message || '')
+
+  if (message.includes('auth/network-request-failed')) {
+    return 'We could not connect to authentication. Please check your connection and try again.'
+  }
+
+  if (message.includes('auth/unauthorized-domain')) {
+    return 'Firebase is blocking this domain. Use http://localhost:5173 locally, and make sure localhost is added in Firebase Authentication authorized domains.'
+  }
+
+  if (message.includes('auth/popup-closed-by-user')) {
+    return 'Google sign-in was closed before it finished. Please keep the Google window open until the account is selected.'
+  }
+
+  if (message.includes('auth/invalid-credential') || message.includes('auth/wrong-password')) {
+    return 'The email or password is incorrect.'
+  }
+
+  if (message.includes('auth/email-already-in-use')) {
+    return 'An account already exists for this email. Please log in instead.'
+  }
+
+  if (message.includes('auth/weak-password')) {
+    return 'Please choose a stronger password.'
+  }
+
+  if (message.includes('auth/too-many-requests')) {
+    return 'Too many attempts. Please wait a moment and try again.'
+  }
+
+  return error?.message || 'Unable to complete authentication right now.'
+}
+
 function AuthPage({ mode = 'login' }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { forgotPassword, googleLogin, login, signup } = useStore()
   const isLogin = mode === 'login'
-  const redirectTo = location.state?.redirectTo
-  const notice = location.state?.notice
+  const searchParams = new URLSearchParams(location.search)
+  const redirectTo = location.state?.redirectTo || searchParams.get('redirectTo')
+  const isCheckoutRedirect = searchParams.get('checkout') === '1'
+  const notice =
+    location.state?.notice ||
+    (isCheckoutRedirect ? 'Please sign in or create an account before secure checkout.' : '')
+  const alternateAuthPath = `${isLogin ? '/signup' : '/login'}${location.search || ''}`
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -49,10 +88,10 @@ function AuthPage({ mode = 'login' }) {
         })
       }
 
-      navigate(redirectTo || '/profile')
+      navigate(redirectTo || '/profile', { replace: Boolean(redirectTo) })
     } catch (error) {
       setFeedback({
-        error: error.message || 'Unable to complete authentication right now.',
+        error: getAuthErrorMessage(error),
         success: '',
       })
     } finally {
@@ -66,10 +105,10 @@ function AuthPage({ mode = 'login' }) {
 
     try {
       await googleLogin()
-      navigate(redirectTo || '/profile')
+      navigate(redirectTo || '/profile', { replace: Boolean(redirectTo) })
     } catch (error) {
       setFeedback({
-        error: error.message || 'Unable to continue with Google right now.',
+        error: getAuthErrorMessage(error),
         success: '',
       })
     } finally {
@@ -98,7 +137,7 @@ function AuthPage({ mode = 'login' }) {
       })
     } catch (error) {
       setFeedback({
-        error: error.message || 'Unable to send reset link right now.',
+        error: getAuthErrorMessage(error),
         success: '',
       })
     } finally {
@@ -257,7 +296,7 @@ function AuthPage({ mode = 'login' }) {
 
             <p className="mt-8 border-t border-black/8 pt-7 text-sm text-muted">
               {isLogin ? 'New to ELURA?' : 'Already have an account?'}{' '}
-              <Link to={isLogin ? '/signup' : '/login'} className="font-semibold text-gold">
+              <Link to={alternateAuthPath} className="font-semibold text-gold">
                 {isLogin ? 'Sign up' : 'Log in'}
               </Link>
             </p>

@@ -5,14 +5,8 @@ import {
   useState,
 } from 'react'
 
-import {
-  doc,
-  onSnapshot,
-} from 'firebase/firestore'
-
-import { db } from '../lib/firebase'
-
 import Reveal from '../components/Reveal.jsx'
+import { subscribeCmsDoc } from '../lib/cms.js'
 
 function FinalCtaSection({ banners: fallbackBanners = [] }) {
   const [banners, setBanners] =
@@ -25,32 +19,23 @@ function FinalCtaSection({ banners: fallbackBanners = [] }) {
     useState(0)
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      doc(
-        db,
-        'cms',
-        'ctaBanners',
-      ),
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data()
+    const unsubscribe = subscribeCmsDoc(
+      'ctaBanners',
+      {
+        rotationEnabled: false,
+        banners: fallbackBanners,
+      },
+      (data) => {
+        setRotationEnabled(data.rotationEnabled || false)
 
-          setRotationEnabled(
-            data.rotationEnabled ||
-              false,
-          )
-
-          if (data.banners?.length) {
-            setBanners(
-              data.banners,
-            )
-          }
+        if (data.banners?.length) {
+          setBanners(data.banners)
         }
       },
     )
 
-    return () => unsubscribe()
-  }, [])
+    return unsubscribe
+  }, [fallbackBanners])
 
   useEffect(() => {
     if (

@@ -16,9 +16,7 @@ class AppErrorBoundary extends Component {
     }
   }
 
-  componentDidCatch(error, errorInfo) {
-    console.error('ELURA render error', error, errorInfo)
-  }
+  componentDidCatch() {}
 
   componentDidUpdate(previousProps) {
     if (

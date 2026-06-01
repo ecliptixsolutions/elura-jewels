@@ -61,8 +61,8 @@ function AdminCTAPage() {
           setBanners(data.banners)
         }
       }
-    } catch (error) {
-      console.log(error)
+    } catch {
+      window.alert('Failed to load CTA settings.')
     }
   }
 
@@ -224,8 +224,8 @@ function AdminCTAPage() {
       alert(
         'CTA Banners saved successfully.',
       )
-    } catch (error) {
-      console.log(error)
+    } catch {
+      window.alert('Failed to save CTA settings.')
     } finally {
       setLoading(false)
     }

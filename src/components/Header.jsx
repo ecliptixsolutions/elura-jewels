@@ -12,7 +12,7 @@ import logoImage from '../assets/brand/elura-logo.svg'
 import { navigationItems } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
 
-function Header({ onCartOpen }) {
+function Header({ onCartOpen, announcement }) {
   const navigate = useNavigate()
   const { cartCount, wishlistIds, products, user } = useStore()
   const [isScrolled, setIsScrolled] = useState(false)
@@ -45,6 +45,18 @@ function Header({ onCartOpen }) {
   const headerClasses = isScrolled
     ? 'border-b border-black/8 bg-[rgba(248,246,242,0.97)] shadow-[0_16px_34px_rgba(27,24,19,0.05)] backdrop-blur-[3px]'
     : 'border-b border-black/6 bg-[rgba(248,246,242,0.94)] shadow-[0_10px_24px_rgba(27,24,19,0.03)] backdrop-blur-[2px]'
+  const showAnnouncement = Boolean(announcement?.enabled && announcement?.message?.trim())
+  const announcementContent = (
+    <div
+      className="flex min-h-[34px] items-center justify-center px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.26em]"
+      style={{
+        backgroundColor: announcement?.backgroundColor || '#1B1813',
+        color: announcement?.textColor || '#F8F6F2',
+      }}
+    >
+      {announcement?.message}
+    </div>
+  )
 
   const handleSearchSubmit = (event) => {
     event.preventDefault()
@@ -61,6 +73,13 @@ function Header({ onCartOpen }) {
       <header
         className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${headerClasses}`}
       >
+        {showAnnouncement ? (
+          announcement.linkUrl ? (
+            <Link to={announcement.linkUrl}>{announcementContent}</Link>
+          ) : (
+            announcementContent
+          )
+        ) : null}
         <div className="section-shell">
           <div className="navbar flex h-[60px] items-center justify-between gap-4 sm:h-[72px]">
             
@@ -223,9 +242,9 @@ function Header({ onCartOpen }) {
 
           {suggestions.length > 0 && (
             <div className="mt-4 overflow-hidden rounded-[18px] bg-white/92 p-2 shadow-[0_24px_70px_rgba(27,24,19,0.1)] backdrop-blur-xl">
-              {suggestions.map((product) => (
+              {suggestions.map((product, index) => (
                 <button
-                  key={product.id}
+                  key={`${product.id}-${product.slug || index}`}
                   type="button"
                   onClick={() => {
                     setSearchOpen(false)

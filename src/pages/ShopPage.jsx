@@ -141,8 +141,8 @@ function ShopPage() {
 
           <section>
             <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {filteredProducts.map((product, index) => (
+                <ProductCard key={`${product.id}-${product.slug || index}`} product={product} />
               ))}
             </div>
 

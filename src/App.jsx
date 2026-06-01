@@ -14,6 +14,7 @@ import {
 } from 'react-router-dom'
 
 import SiteLayout from './components/SiteLayout.jsx'
+import AdminLayout from './components/AdminLayout.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute'
 import PageLoader from './components/PageLoader.jsx'
 import AppErrorBoundary from './components/AppErrorBoundary.jsx'
@@ -32,14 +33,23 @@ const AdminBannersPage = lazy(() => import('./pages/AdminBannersPage'))
 const AdminCollectionsPage = lazy(() => import('./pages/AdminCollectionsPage'))
 const AdminCTAPage = lazy(() => import('./pages/AdminCTAPage'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminCouponsPage = lazy(() => import('./pages/AdminCouponsPage.jsx'))
+const AdminMarketingPage = lazy(() => import('./pages/AdminMarketingPage.jsx'))
+const AdminNewsletterPage = lazy(() => import('./pages/AdminNewsletterPage.jsx'))
+const AdminSettingsPage = lazy(() => import('./pages/AdminSettingsPage.jsx'))
+const AdminShopifyCustomersPage = lazy(() => import('./pages/AdminShopifyCustomersPage.jsx'))
+const AdminShopifySubscribersPage = lazy(() => import('./pages/AdminShopifySubscribersPage.jsx'))
+const AdminSocialMediaPage = lazy(() => import('./pages/AdminSocialMediaPage.jsx'))
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage.jsx'))
+const CollectionPage = lazy(() => import('./pages/CollectionPage.jsx'))
 const ContactPage = lazy(() => import('./pages/ContactPage.jsx'))
 const FaqPage = lazy(() => import('./pages/FaqPage.jsx'))
 const HomePage = lazy(() => import('./pages/HomePage.jsx'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
+const OrderDetailsPage = lazy(() => import('./pages/OrderDetailsPage.jsx'))
 const PrivacyPolicy = lazy(() => import('./pages/privacy-policy.jsx'))
 const ProductPage = lazy(() => import('./pages/ProductPage.jsx'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
@@ -76,6 +86,11 @@ function AppRoutes() {
             <Route
               path="/collections"
               element={<CollectionsPage />}
+            />
+
+            <Route
+              path="/collections/:handle"
+              element={<CollectionPage />}
             />
 
             <Route
@@ -129,6 +144,11 @@ function AppRoutes() {
             />
 
             <Route
+              path="/profile/orders/:orderId"
+              element={<OrderDetailsPage />}
+            />
+
+            <Route
               path="/product/:slug"
               element={<ProductPage />}
             />
@@ -149,56 +169,6 @@ function AppRoutes() {
               element={<AdminLoginPage />}
             />
 
-            {/* ADMIN DASHBOARD */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminDashboard />
-                </ProtectedAdminRoute>
-              }
-            />
-
-            {/* ADMIN BANNERS */}
-            <Route
-              path="/admin/banners"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminBannersPage />
-                </ProtectedAdminRoute>
-              }
-            />
-
-            {/* ADMIN COLLECTIONS */}
-            <Route
-              path="/admin/collections"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminCollectionsPage />
-                </ProtectedAdminRoute>
-              }
-            />
-
-            {/* ADMIN ABOUT */}
-            <Route
-              path="/admin/about"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminAboutPage />
-                </ProtectedAdminRoute>
-              }
-            />
-
-            {/* ADMIN CTA */}
-            <Route
-              path="/admin/cta"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminCTAPage />
-                </ProtectedAdminRoute>
-              }
-            />
-
             <Route
               path="/home"
               element={
@@ -214,6 +184,28 @@ function AppRoutes() {
               element={<NotFoundPage />}
             />
 
+          </Route>
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedAdminRoute>
+                <AdminLayout />
+              </ProtectedAdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="banners" element={<AdminBannersPage />} />
+            <Route path="collections" element={<AdminCollectionsPage />} />
+            <Route path="about" element={<AdminAboutPage />} />
+            <Route path="cta" element={<AdminCTAPage />} />
+            <Route path="coupons" element={<AdminCouponsPage />} />
+            <Route path="marketing" element={<AdminMarketingPage />} />
+            <Route path="marketing/customers" element={<AdminShopifyCustomersPage />} />
+            <Route path="marketing/subscribers" element={<AdminShopifySubscribersPage />} />
+            <Route path="marketing/newsletter" element={<AdminNewsletterPage />} />
+            <Route path="social-media" element={<AdminSocialMediaPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
 
         </Routes>

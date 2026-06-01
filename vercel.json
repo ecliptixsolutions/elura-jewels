@@ -20,8 +20,12 @@
           "value": "camera=(), microphone=(), geolocation=(self), payment=(self)"
         },
         {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        },
+        {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.shopify.com https://images.unsplash.com https://upload.wikimedia.org https://firebasestorage.googleapis.com https://*.googleusercontent.com; media-src 'self' blob: https://firebasestorage.googleapis.com https://cdn.shopify.com; connect-src 'self' http://localhost:5000 https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://elura-jewels-2.myshopify.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.shopify.com https://images.unsplash.com https://upload.wikimedia.org https://firebasestorage.googleapis.com https://*.googleusercontent.com; media-src 'self' blob: https://firebasestorage.googleapis.com https://cdn.shopify.com; connect-src 'self' http://localhost:5000 https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://elura-jewels-2.myshopify.com https://challenges.cloudflare.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://challenges.cloudflare.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },

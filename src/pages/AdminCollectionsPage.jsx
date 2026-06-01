@@ -1,182 +1,85 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { Link } from 'react-router-dom'
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-} from 'firebase/firestore'
+import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
+import { getShopifyCollections } from '../lib/shopify.js'
 
-import { db } from '../lib/firebase'
-
-const collections = [
-  {
-    key: 'necklaces',
-    title: 'Necklace & Sets',
-    size: '830 × 980',
-  },
-  {
-    key: 'earrings',
-    title: 'Earrings',
-    size: '640 × 430',
-  },
-  {
-    key: 'rings',
-    title: 'Rings',
-    size: '640 × 430',
-  },
-  {
-    key: 'bangles',
-    title: 'Bangles',
-    size: '640 × 430',
-  },
-  {
-    key: 'bracelets',
-    title: 'Bracelets',
-    size: '640 × 430',
-  },
-]
+const collectionsFallback = {
+  enabled: true,
+  sectionTitle: 'Explore Our Collections',
+  sectionSubtitle: 'Discover luxury jewellery collections curated for every occasion.',
+  maximumCollections: 6,
+  displayStyle: 'editorial',
+  items: [],
+}
 
 function AdminCollectionsPage() {
-  const [loading, setLoading] =
-    useState(false)
-
-  const [items, setItems] = useState(
-    collections.map((item) => ({
-      ...item,
-      type: 'image',
-      file: null,
-      preview: '',
-      url: '',
-    })),
-  )
+  const [loading, setLoading] = useState(false)
+  const [settings, setSettings] = useState(collectionsFallback)
+  const [shopifyCollections, setShopifyCollections] = useState([])
+  const [shopifyError, setShopifyError] = useState('')
 
   useEffect(() => {
-    loadCollections()
+    const unsubscribe = subscribeCmsDoc(
+      'collections',
+      collectionsFallback,
+      setSettings,
+    )
+
+    return unsubscribe
   }, [])
 
-  const loadCollections = async () => {
-    try {
-      const snapshot = await getDoc(
-        doc(db, 'cms', 'collections'),
-      )
+  useEffect(() => {
+    let isActive = true
 
-      if (snapshot.exists()) {
-        const data = snapshot.data()
+    async function loadShopifyCollections() {
+      try {
+        const collections = await getShopifyCollections()
 
-        const mergedItems =
-          collections.map(
-            (defaultItem, index) => ({
-              ...defaultItem,
-              ...(data.items?.[index] || {}),
-              file: null,
-              preview: '',
-            }),
-          )
-
-        setItems(mergedItems)
+        if (isActive) {
+          setShopifyCollections(collections)
+        }
+      } catch (error) {
+        if (isActive) {
+          setShopifyError(error.message)
+        }
       }
-    } catch (error) {
-      console.log(error)
     }
-  }
 
-  const uploadToCloudinary = async (
-    file,
-    resourceType = 'image',
-  ) => {
-    const formData = new FormData()
+    loadShopifyCollections()
 
-    formData.append('file', file)
+    return () => {
+      isActive = false
+    }
+  }, [])
 
-    formData.append(
-      'upload_preset',
-      import.meta.env
-        .VITE_CLOUDINARY_UPLOAD_PRESET,
-    )
-
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${
-        import.meta.env
-          .VITE_CLOUDINARY_CLOUD_NAME
-      }/${resourceType}/upload`,
-      formData,
-    )
-
-    return response.data.secure_url
-  }
-
-  const handleFileChange = (
-    index,
-    file,
-  ) => {
-    if (!file) return
-
-    const updated = [...items]
-
-    updated[index].file = file
-
-    updated[index].preview =
-      URL.createObjectURL(file)
-
-    setItems(updated)
-  }
-
-  const removeMedia = (index) => {
-    const updated = [...items]
-
-    updated[index].file = null
-    updated[index].preview = ''
-    updated[index].url = ''
-
-    setItems(updated)
+  const updateSetting = (field, value) => {
+    setSettings((current) => ({
+      ...current,
+      [field]: value,
+    }))
   }
 
   const saveCollections = async () => {
+    setLoading(true)
+
     try {
-      setLoading(true)
+      await saveCmsDoc('collections', {
+        enabled: Boolean(settings.enabled),
+        sectionTitle: settings.sectionTitle.trim(),
+        sectionSubtitle: settings.sectionSubtitle.trim(),
+        maximumCollections: Number(settings.maximumCollections || 6),
+        displayStyle: settings.displayStyle,
+        items: shopifyCollections.map((collection) => ({
+          id: collection.id,
+          handle: collection.handle,
+          title: collection.title,
+        })),
+      })
 
-      const updatedItems =
-        await Promise.all(
-          items.map(async (item) => {
-            let mediaUrl = item.url
-
-            if (item.file) {
-              mediaUrl =
-                await uploadToCloudinary(
-                  item.file,
-                  item.type === 'video'
-                    ? 'video'
-                    : 'image',
-                )
-            }
-
-            return {
-              key: item.key,
-              title: item.title,
-              size: item.size,
-              type: item.type,
-              url: mediaUrl,
-            }
-          }),
-        )
-
-      await setDoc(
-        doc(db, 'cms', 'collections'),
-        {
-          items: updatedItems,
-        },
-      )
-
-      alert(
-        'Collections saved successfully.',
-      )
-
-      loadCollections()
+      window.alert('Collections CMS settings saved successfully.')
     } catch (error) {
-      console.log(error)
-
-      alert('Failed to save collections.')
+      window.alert(error.message || 'Failed to save collections settings.')
     } finally {
       setLoading(false)
     }
@@ -185,217 +88,97 @@ function AdminCollectionsPage() {
   return (
     <div className="section-spacing">
       <div className="section-shell">
-
-        <p className="section-eyebrow">
-          COLLECTIONS CMS
+        <p className="section-eyebrow">Collections CMS</p>
+        <h1 className="mt-3 text-5xl">Homepage Collections</h1>
+        <p className="mt-4 max-w-3xl text-muted">
+          Collections are synced from Shopify. This page controls how the homepage collection section is presented.
         </p>
 
-        <h1 className="mt-3 text-5xl">
-          Collections Management
-        </h1>
+        <div className="mt-12 grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[8px] border border-black/8 bg-white p-8">
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.enabled)}
+                onChange={(event) => updateSetting('enabled', event.target.checked)}
+              />
+              <span className="text-sm font-medium">Enable homepage collections section</span>
+            </label>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
-
-          {items.map((item, index) => (
-            <div
-              key={item.key}
-              className="rounded-[28px] border border-black/8 bg-white p-8"
-            >
-
-              <h2 className="text-3xl">
-                {item.title}
-              </h2>
-
-              {/* INFO CARD */}
-              <div className="mt-8 rounded-[20px] border border-black/8 bg-[#faf8f4] p-5">
-
-                <p className="text-sm font-semibold">
-                  Supported Formats
-                </p>
-
-                <p className="mt-2 text-sm text-muted">
-                  PNG, JPG, JPEG, WEBP,
-                  MP4
-                </p>
-
-                <p className="mt-4 text-sm font-semibold">
-                  Real Section Size
-                </p>
-
-                <p className="mt-2 text-sm text-muted">
-                  {item.size}
-                </p>
-
-              </div>
-
-              {/* TYPE */}
-              <div className="mt-6 flex items-center gap-8">
-
-                <label className="flex items-center gap-2">
-
+            <div className="mt-8 grid gap-6">
+              <input
+                value={settings.sectionTitle}
+                onChange={(event) => updateSetting('sectionTitle', event.target.value)}
+                className="input-shell"
+                placeholder="Section title"
+              />
+              <textarea
+                value={settings.sectionSubtitle}
+                onChange={(event) => updateSetting('sectionSubtitle', event.target.value)}
+                className="input-shell min-h-24 resize-none"
+                placeholder="Section subtitle"
+              />
+              <div className="grid gap-6 sm:grid-cols-2">
+                <label className="text-sm text-muted">
+                  Maximum collections
                   <input
-                    type="radio"
-                    checked={
-                      item.type === 'image'
-                    }
-                    onChange={() => {
-                      const updated = [
-                        ...items,
-                      ]
-
-                      updated[index].type =
-                        'image'
-
-                      setItems(updated)
-                    }}
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.maximumCollections}
+                    onChange={(event) => updateSetting('maximumCollections', event.target.value)}
+                    className="input-shell mt-2"
                   />
-
-                  Image
-
                 </label>
-
-                <label className="flex items-center gap-2">
-
-                  <input
-                    type="radio"
-                    checked={
-                      item.type === 'video'
-                    }
-                    onChange={() => {
-                      const updated = [
-                        ...items,
-                      ]
-
-                      updated[index].type =
-                        'video'
-
-                      setItems(updated)
-                    }}
-                  />
-
-                  Video
-
-                </label>
-
-              </div>
-
-              {/* FILE INPUT */}
-              <div className="mt-6">
-
-                <p className="mb-3 text-sm font-medium">
-                  Upload Media
-                </p>
-
-                <input
-                  type="file"
-                  accept={
-                    item.type === 'image'
-                      ? 'image/*'
-                      : 'video/*'
-                  }
-                  onChange={(e) =>
-                    handleFileChange(
-                      index,
-                      e.target.files?.[0],
-                    )
-                  }
-                />
-
-              </div>
-
-              {/* PREVIEW */}
-              {(item.preview ||
-                item.url) && (
-                <div className="mt-8 overflow-hidden rounded-[24px] border border-black/8 bg-[#f5f1ea]">
-
-                  <div
-                    className={`overflow-hidden ${
-                      index === 0
-                        ? 'aspect-[5/6]'
-                        : 'aspect-[3/2]'
-                    }`}
+                <label className="text-sm text-muted">
+                  Display style
+                  <select
+                    value={settings.displayStyle}
+                    onChange={(event) => updateSetting('displayStyle', event.target.value)}
+                    className="input-shell mt-2"
                   >
-
-                    {item.type ===
-                    'image' ? (
-                      <img
-                        src={
-                          item.preview ||
-                          item.url
-                        }
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <video
-                        src={
-                          item.preview ||
-                          item.url
-                        }
-                        controls
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-
-                  </div>
-
-                </div>
-              )}
-
-              {/* BUTTONS */}
-              <div className="mt-6 flex gap-4">
-
-                <label className="cursor-pointer rounded-full border border-black/10 px-5 py-2 text-sm transition hover:bg-black hover:text-white">
-
-                  Change Media
-
-                  <input
-                    type="file"
-                    accept={
-                      item.type ===
-                      'image'
-                        ? 'image/*'
-                        : 'video/*'
-                    }
-                    className="hidden"
-                    onChange={(e) =>
-                      handleFileChange(
-                        index,
-                        e.target.files?.[0],
-                      )
-                    }
-                  />
-
+                    <option value="editorial">Editorial</option>
+                    <option value="grid">Grid</option>
+                  </select>
                 </label>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    removeMedia(index)
-                  }
-                  className="rounded-full border border-red-200 px-5 py-2 text-sm text-red-500 transition hover:bg-red-50"
-                >
-                  Remove Media
-                </button>
-
               </div>
-
             </div>
-          ))}
 
+            <button type="button" onClick={saveCollections} disabled={loading} className="btn-primary mt-8">
+              {loading ? 'Saving...' : 'Save Collections CMS'}
+            </button>
+          </div>
+
+          <div className="rounded-[8px] border border-black/8 bg-white p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="section-eyebrow">Shopify Sync</p>
+                <h2 className="mt-3 text-3xl">Synced Collections</h2>
+              </div>
+              <Link to="/collections" className="line-link">
+                View Page
+              </Link>
+            </div>
+
+            {shopifyError ? <p className="mt-6 text-sm text-red-600">{shopifyError}</p> : null}
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {shopifyCollections.map((collection) => (
+                <article key={collection.id} className="rounded-[8px] border border-black/8 p-4">
+                  {collection.image ? (
+                    <img
+                      src={collection.image}
+                      alt={collection.altText || collection.title}
+                      className="h-36 w-full rounded-[8px] object-cover"
+                    />
+                  ) : null}
+                  <h3 className="mt-4 text-xl">{collection.title}</h3>
+                  <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted">{collection.handle}</p>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
-
-        {/* SAVE BUTTON */}
-        <button
-          onClick={saveCollections}
-          disabled={loading}
-          className="btn-primary mt-10"
-        >
-          {loading
-            ? 'Saving...'
-            : 'Save Collections'}
-        </button>
-
       </div>
     </div>
   )

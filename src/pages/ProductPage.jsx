@@ -1,11 +1,17 @@
-import { Minus, Plus, Star } from 'lucide-react'
-import { useState } from 'react'
+import { Bell, ChevronDown, Minus, PackageCheck, Plus, ShieldCheck, Sparkles, Truck, Undo2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
 import SEO from '../components/SEO.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { formatCurrency } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
+import { createBackInStockCustomer } from '../lib/api.js'
+import { subscribeCmsDoc } from '../lib/cms.js'
+import { estimateDelivery } from '../lib/conversion.js'
+import { mapShopifyProduct } from '../lib/productMapping.js'
+import { getShopifyProductRecommendations } from '../lib/shopify.js'
+import { trackConversionEvent } from '../lib/analytics.js'
 import {
   breadcrumbSchema,
   productSchema,
@@ -13,7 +19,15 @@ import {
 
 function ProductPage() {
   const { slug } = useParams()
-  const { addToCart, products, isProductsLoading } = useStore()
+  const {
+    addToCart,
+    buyNow,
+    conversionSettings,
+    isProductsLoading,
+    products,
+    recentlyViewedIds,
+    trackRecentlyViewedProduct,
+  } = useStore()
   const product = products.find((item) => item.slug === slug)
 
   if (!product && isProductsLoading) {
@@ -65,26 +79,167 @@ function ProductPage() {
     .filter((item) => item.category === product.category && item.slug !== product.slug)
     .slice(0, 4)
 
-  return <ProductPageDetail key={product.slug} product={product} addToCart={addToCart} relatedProducts={relatedProducts} />
+  return (
+    <ProductPageDetail
+      key={product.slug}
+      product={product}
+      addToCart={addToCart}
+      buyNow={buyNow}
+      conversionSettings={conversionSettings}
+      relatedProducts={relatedProducts}
+      recentlyViewedProducts={recentlyViewedIds
+        .map((id) => products.find((item) => item.id === id || item.shopifyProductId === id))
+        .filter((item) => item && item.slug !== product.slug)
+        .slice(0, 8)}
+      trackRecentlyViewedProduct={trackRecentlyViewedProduct}
+    />
+  )
 }
 
-function ProductPageDetail({ product, addToCart, relatedProducts }) {
+const careGuideFallback = {
+  title: 'Jewellery Care Guide',
+  summary: 'Care guidance is managed from ELURA CMS.',
+  steps: [
+    'Store each piece separately in its pouch.',
+    'Avoid perfume, lotions, and water contact.',
+    'Polish gently with a soft jewellery cloth.',
+  ],
+}
+
+function ProductPageDetail({
+  product,
+  addToCart,
+  buyNow,
+  conversionSettings,
+  recentlyViewedProducts,
+  relatedProducts,
+  trackRecentlyViewedProduct,
+}) {
   const [selectedImage, setSelectedImage] = useState(product.images[0])
+  const [selectedVariantId, setSelectedVariantId] = useState(product.variantId)
   const [quantity, setQuantity] = useState(1)
-  const reviewCount = product.reviews?.length ?? 0
-  const averageRating = reviewCount
-    ? (
-        product.reviews.reduce((total, review) => total + Number(review.rating || 0), 0) /
-        reviewCount
-      ).toFixed(1)
-    : null
+  const [recommendedProducts, setRecommendedProducts] = useState([])
+  const [careGuide, setCareGuide] = useState(careGuideFallback)
+  const [backInStockEmail, setBackInStockEmail] = useState('')
+  const [backInStockStatus, setBackInStockStatus] = useState('')
+  const [backInStockError, setBackInStockError] = useState('')
+  const [isBackInStockSubmitting, setIsBackInStockSubmitting] = useState(false)
+  const selectedVariant =
+    product.variants?.find((variant) => variant.id === selectedVariantId) ||
+    product.variants?.find((variant) => variant.availableForSale) ||
+    product.variants?.[0]
+  const selectedPrice = Number.parseFloat(selectedVariant?.price?.amount ?? product.price)
+  const selectedQuantityAvailable = Number.isFinite(Number(selectedVariant?.quantityAvailable))
+    ? Number(selectedVariant.quantityAvailable)
+    : product.quantityAvailable
+  const selectedProduct = {
+    ...product,
+    variantId: selectedVariant?.id || product.variantId,
+    price: Number.isNaN(selectedPrice) ? product.price : selectedPrice,
+    currencyCode: selectedVariant?.price?.currencyCode || product.currencyCode,
+    sku: selectedVariant?.sku || product.sku,
+    quantityAvailable: selectedQuantityAvailable,
+  }
+  const isAvailable = product.availableForSale !== false && selectedVariant?.availableForSale !== false
+  const lowStockThreshold = Number(conversionSettings.lowStockThreshold || 0)
+  const showLowStock =
+    isAvailable &&
+    Number.isFinite(Number(selectedQuantityAvailable)) &&
+    Number(selectedQuantityAvailable) > 0 &&
+    Number(selectedQuantityAvailable) <= lowStockThreshold
+  const deliveryEstimate = estimateDelivery('GB')
+  const internationalEstimate = estimateDelivery('US')
+  const displayRecommendations = recommendedProducts.length ? recommendedProducts : relatedProducts
+  const matchingJewellery = displayRecommendations
+    .filter((item) => item.category === product.category)
+    .slice(0, 4)
   const productSeoTitle = `${product.name} | Luxury ${product.category} Jewellery UK`
   const productSeoDescription = `${product.description} Shop ${product.name} from ELURA Jewels with premium UK delivery, refined gifting presentation, and elegant luxury jewellery styling.`
   const sku =
-    product.sku ||
+    selectedProduct.sku ||
     `ELURA-${String(product.id).replace(/[^a-z0-9-]/gi, '').toUpperCase()}`
-  const availability = product.availableForSale === false ? 'Out of stock' : 'In stock'
-  const currency = product.currencyCode || 'GBP'
+  const availability = isAvailable ? 'In stock' : 'Out of stock'
+  const currency = selectedProduct.currencyCode || 'GBP'
+
+  useEffect(() => {
+    setSelectedImage(product.images[0])
+    setSelectedVariantId(product.variantId)
+    setQuantity(1)
+  }, [product])
+
+  useEffect(() => {
+    trackRecentlyViewedProduct(product.shopifyProductId || product.id)
+    trackConversionEvent('product_view', {
+      product_id: product.shopifyProductId || product.id,
+      item_name: product.name,
+      item_category: product.category,
+      currency: product.currencyCode || 'GBP',
+      value: product.price,
+    })
+  }, [product, trackRecentlyViewedProduct])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadRecommendations() {
+      try {
+        const recommendations = await getShopifyProductRecommendations(product.shopifyProductId)
+
+        if (isActive) {
+          setRecommendedProducts(
+            recommendations
+              .map(mapShopifyProduct)
+              .filter((item) => item.slug !== product.slug)
+              .slice(0, 8),
+          )
+        }
+      } catch {
+        if (isActive) {
+          setRecommendedProducts([])
+        }
+      }
+    }
+
+    loadRecommendations()
+
+    return () => {
+      isActive = false
+    }
+  }, [product.shopifyProductId, product.slug])
+
+  useEffect(() => {
+    const unsubscribe = subscribeCmsDoc(
+      'careGuide',
+      careGuideFallback,
+      setCareGuide,
+    )
+
+    return unsubscribe
+  }, [])
+
+  const handleAddToCart = () => addToCart(selectedProduct, quantity)
+  const handleBuyNow = () => buyNow(selectedProduct, quantity)
+  const handleBackInStockSubmit = async (event) => {
+    event.preventDefault()
+    setBackInStockStatus('')
+    setBackInStockError('')
+    setIsBackInStockSubmitting(true)
+
+    try {
+      await createBackInStockCustomer({
+        email: backInStockEmail,
+        productHandle: product.slug,
+        productTitle: product.name,
+        variantId: selectedProduct.variantId,
+      })
+      setBackInStockStatus('We will email you when this piece is available again.')
+      setBackInStockEmail('')
+    } catch (error) {
+      setBackInStockError(error.message)
+    } finally {
+      setIsBackInStockSubmitting(false)
+    }
+  }
 
   return (
     <div className="section-spacing">
@@ -166,20 +321,39 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
             <p className="section-eyebrow">{product.category}</p>
             <h1 className="mt-4 text-4xl sm:text-5xl">{product.name}</h1>
             <p className="mt-4 text-2xl font-semibold text-ink">
-              {formatCurrency(product.price)}
+              {formatCurrency(selectedProduct.price)}
             </p>
             <p className="mt-3 text-xs uppercase tracking-[0.24em] text-muted">
               SKU {sku} &middot; {availability} &middot; {currency}
             </p>
-            {averageRating ? (
-              <p className="mt-3 text-sm text-muted">
-                Rated {averageRating}/5 from {reviewCount} customer review
-                {reviewCount === 1 ? '' : 's'}.
+            {showLowStock ? (
+              <p className="mt-4 inline-flex rounded-full bg-white/75 px-4 py-2 text-sm font-semibold text-gold">
+                Only {selectedQuantityAvailable} left in stock
               </p>
             ) : null}
             <p className="mt-6 text-base text-muted sm:text-lg">{product.description}</p>
 
             <div className="mt-8 space-y-6 border-t border-black/8 pt-7">
+              {product.variants?.length > 1 ? (
+                <label className="block">
+                  <span className="section-eyebrow">Variant</span>
+                  <span className="relative mt-3 block">
+                    <select
+                      value={selectedVariant?.id || ''}
+                      onChange={(event) => setSelectedVariantId(event.target.value)}
+                      className="input-shell appearance-none pr-10"
+                    >
+                      {product.variants.map((variant) => (
+                        <option key={variant.id} value={variant.id}>
+                          {variant.title} - {formatCurrency(Number(variant.price?.amount || product.price))}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  </span>
+                </label>
+              ) : null}
+
               <div>
                 <p className="section-eyebrow">Material Details</p>
                 <ul className="mt-4 space-y-2 text-sm text-muted">
@@ -214,20 +388,67 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
 
                 <button
                   type="button"
-                  onClick={() => addToCart(product, quantity)}
+                  onClick={handleAddToCart}
                   className="btn-primary"
+                  disabled={!isAvailable}
                 >
-                  Add to Cart
+                  {isAvailable ? 'Add to Cart' : 'Out of Stock'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => addToCart(product, quantity)}
+                  onClick={handleBuyNow}
                   className="btn-secondary"
+                  disabled={!isAvailable}
                 >
                   Buy Now
                 </button>
               </div>
             </div>
+
+            <TrustBadges />
+
+            <div className="mt-8 grid gap-3 border-t border-black/8 pt-7 text-sm text-muted sm:grid-cols-2">
+              <div className="rounded-[8px] bg-white/65 p-4">
+                <p className="font-semibold text-ink">{deliveryEstimate.label}</p>
+                <p className="mt-1">{conversionSettings.ukDeliveryLabel || deliveryEstimate.text}</p>
+              </div>
+              <div className="rounded-[8px] bg-white/65 p-4">
+                <p className="font-semibold text-ink">{internationalEstimate.label}</p>
+                <p className="mt-1">{conversionSettings.internationalDeliveryLabel || internationalEstimate.text}</p>
+              </div>
+            </div>
+
+            {!isAvailable ? (
+              <form
+                onSubmit={handleBackInStockSubmit}
+                className="mt-8 rounded-[8px] border border-black/8 bg-white/75 p-5"
+              >
+                <p className="section-eyebrow">Back In Stock</p>
+                <p className="mt-3 text-sm text-muted">
+                  Join the Shopify notification list for this piece.
+                </p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="email"
+                    value={backInStockEmail}
+                    onChange={(event) => setBackInStockEmail(event.target.value)}
+                    className="input-shell"
+                    placeholder="Email address"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={isBackInStockSubmitting}
+                    className="btn-secondary shrink-0"
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    Notify Me
+                  </button>
+                </div>
+                {backInStockStatus ? <p className="mt-3 text-sm text-emerald">{backInStockStatus}</p> : null}
+                {backInStockError ? <p className="mt-3 text-sm text-red-600">{backInStockError}</p> : null}
+              </form>
+            ) : null}
 
             <div className="mt-8 border-t border-black/8 pt-7">
               <p className="section-eyebrow">Additional Product Info</p>
@@ -237,49 +458,193 @@ function ProductPageDetail({ product, addToCart, relatedProducts }) {
                 ))}
               </ul>
             </div>
+
+            <details className="mt-8 border-t border-black/8 pt-7">
+              <summary className="flex cursor-pointer items-center justify-between gap-4 text-left">
+                <span>
+                  <span className="section-eyebrow">Care</span>
+                  <span className="mt-2 block text-xl font-semibold text-ink">{careGuide.title}</span>
+                </span>
+                <Sparkles className="h-5 w-5 text-gold" />
+              </summary>
+              <p className="mt-4 text-sm text-muted">{careGuide.summary}</p>
+              <ul className="mt-4 space-y-2 text-sm text-muted">
+                {(careGuide.steps || []).map((step, index) => (
+                  <li key={`${step}-${index}`}>{step}</li>
+                ))}
+              </ul>
+            </details>
           </section>
         </div>
 
         <section className="mt-16">
-          <SectionHeading
-            eyebrow="Customer Reviews"
-            title="What customers are saying"
-            description="Recent feedback from ELURA customers."
-          />
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            {product.reviews.map((review) => (
-              <article
-                key={`${review.name}-${review.date}`}
-                className="rounded-[18px] bg-white/55 p-7"
-              >
-                <div className="flex items-center gap-1 text-gold">
-                  {Array.from({ length: review.rating }).map((_, index) => (
-                    <Star key={index} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <p className="mt-4 text-base text-ink">{review.content}</p>
-                <div className="mt-5 text-sm text-muted">
-                  {review.name} - {review.date}
-                </div>
-              </article>
-            ))}
-          </div>
+          <ReviewsIntegrationSlot product={product} />
         </section>
 
         <section className="mt-16">
           <SectionHeading
-            eyebrow="Related Products"
-            title="You may also like"
-            description="More from the ELURA collection in a similar style."
+            eyebrow="Shopify Recommendations"
+            title="Related products"
+            description="Recommendations are requested from Shopify and fall back to matching collection pieces."
           />
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {relatedProducts.map((relatedProduct) => (
-              <ProductCard key={relatedProduct.id} product={relatedProduct} />
-            ))}
-          </div>
+          <div
+  className="
+    flex
+    gap-3
+    overflow-x-auto
+    snap-x
+    snap-mandatory
+    scrollbar-hide
+    pb-2
+
+    xl:grid
+    xl:grid-cols-4
+    xl:gap-6
+    xl:overflow-visible
+  "
+>
+  {displayRecommendations.map((relatedProduct) => (
+    <div
+      key={relatedProduct.id}
+      className="
+        w-[55%]
+        sm:w-[220px]
+        flex-shrink-0
+        snap-start
+
+        xl:w-auto
+      "
+    >
+      <ProductCard product={relatedProduct} />
+    </div>
+  ))}
+</div>
         </section>
+
+        {matchingJewellery.length ? (
+          <section className="mt-16">
+            <SectionHeading
+              eyebrow="Matching Jewellery"
+              title="Complete the set"
+              description="Pieces from the same Shopify product family."
+            />
+            <ProductScroller products={matchingJewellery} />
+          </section>
+        ) : null}
+
+        {recentlyViewedProducts.length ? (
+          <section className="mt-16">
+            <SectionHeading
+              eyebrow="Recently Viewed"
+              title="Your latest ELURA pieces"
+              description="Stored locally on this device, most recent first."
+            />
+            <ProductScroller products={recentlyViewedProducts} />
+          </section>
+        ) : null}
       </div>
+
+      {isAvailable ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/8 bg-ivory/95 px-4 py-3 shadow-[0_-12px_36px_rgba(27,24,19,0.12)] backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink">{product.name}</p>
+              <p className="text-sm text-muted">{formatCurrency(selectedProduct.price)}</p>
+            </div>
+            <button type="button" onClick={handleAddToCart} className="btn-primary shrink-0 px-5">
+              Add
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function TrustBadges() {
+  const badges = [
+    { label: 'Secure Shopify Checkout', icon: ShieldCheck },
+    { label: 'Free UK Delivery', icon: Truck },
+    { label: 'Easy Returns', icon: Undo2 },
+    { label: 'Authentic Jewellery', icon: PackageCheck },
+  ]
+
+  return (
+    <div className="mt-8 grid grid-cols-2 gap-3 border-t border-black/8 pt-7">
+      {badges.map((badge) => {
+        const BadgeIcon = badge.icon
+
+        return (
+          <div key={badge.label} className="rounded-[8px] bg-white/70 p-4">
+            <BadgeIcon className="h-5 w-5 text-gold" />
+            <p className="mt-3 text-sm font-semibold text-ink">{badge.label}</p>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function ProductScroller({ products }) {
+  return (
+    <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 no-scrollbar md:grid md:grid-cols-4 md:overflow-visible">
+      {products.map((product) => (
+        <div key={product.id} className="w-[64%] flex-none snap-start sm:w-[260px] md:w-auto">
+          <ProductCard product={product} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ReviewsIntegrationSlot({ product }) {
+  const provider = (import.meta.env.VITE_REVIEWS_PROVIDER || '').trim().toLowerCase()
+  const shopifyProductId = product.shopifyProductId || product.id
+
+  if (provider === 'judgeme' || provider === 'judge.me') {
+    return (
+      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+        <div
+          className="jdgm-widget jdgm-review-widget"
+          data-id={shopifyProductId}
+          data-product-title={product.name}
+          data-product-url={`/product/${product.slug}`}
+        />
+      </div>
+    )
+  }
+
+  if (provider === 'loox') {
+    return (
+      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+        <div
+          id="looxReviews"
+          data-product-id={shopifyProductId}
+          data-product-title={product.name}
+        />
+      </div>
+    )
+  }
+
+  if (provider === 'shopify') {
+    return (
+      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+        <div
+          id="shopify-product-reviews"
+          data-id={shopifyProductId}
+          data-product-title={product.name}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+      <p className="section-eyebrow">Reviews Ready</p>
+      <h2 className="mt-3 text-3xl">Review provider integration prepared</h2>
+      <p className="mt-3 max-w-2xl text-sm text-muted">
+        This section is reserved for Judge.me, Loox, or Shopify Reviews widgets when a provider is connected. No mock reviews are rendered.
+      </p>
     </div>
   )
 }

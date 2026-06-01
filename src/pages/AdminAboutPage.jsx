@@ -38,8 +38,8 @@ function AdminAboutPage() {
         setMediaType(data.type)
         setUrl(data.url)
       }
-    } catch (error) {
-      console.log(error)
+    } catch {
+      window.alert('Failed to load about section.')
     }
   }
 
@@ -90,8 +90,8 @@ function AdminAboutPage() {
       })
 
       alert('About section saved.')
-    } catch (error) {
-      console.log(error)
+    } catch {
+      alert('Failed to save about section.')
     } finally {
       setLoading(false)
     }

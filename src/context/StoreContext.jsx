@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -16,12 +16,19 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import {
-  accountOrders,
   homeFeaturedProducts as fallbackHomeFeaturedProducts,
   products as fallbackProducts,
 } from '../data/siteData.js'
 import { auth, db, googleProvider, hasFirebaseConfig } from '../lib/firebase.js'
-import { getShopifyProducts } from '../lib/shopify.js'
+import { getCustomerOrders } from '../lib/api.js'
+import { createShopifyCart, getShopifyProducts } from '../lib/shopify.js'
+import { subscribeCmsDoc } from '../lib/cms.js'
+import { trackConversionEvent } from '../lib/analytics.js'
+import {
+  getRecentlyViewedIds,
+  saveAbandonedCartState,
+  saveRecentlyViewedProduct,
+} from '../lib/conversion.js'
 
 const StoreContext = createContext(null)
 
@@ -71,18 +78,26 @@ const mapShopifyProduct = (node) => {
   )
   const shopifyImages =
     node.images?.edges?.map((edge) => edge.node?.url).filter(Boolean) ?? []
-  const variant = node.variants?.edges?.[0]?.node
+  const variants = node.variants?.edges?.map((edge) => edge.node).filter(Boolean) ?? []
+  const variant = variants.find((item) => item.availableForSale) ?? variants[0]
   const amount = variant?.price?.amount
   const price = Number.parseFloat(amount ?? fallbackProduct?.price ?? 0)
+  const quantityAvailable = variants
+    .map((item) => item.quantityAvailable)
+    .find((value) => Number.isFinite(Number(value)))
 
   return {
     id: fallbackProduct?.id ?? node.id,
+    shopifyProductId: node.id,
     slug: node.handle ?? fallbackProduct?.slug ?? normalizeValue(node.title),
     name: node.title ?? fallbackProduct?.name ?? 'ELURA Product',
     category: node.productType || inferCategory(fallbackProduct, node.handle ?? '', node.title ?? ''),
     price: Number.isNaN(price) ? 0 : price,
     currencyCode: variant?.price?.currencyCode ?? 'GBP',
+    variantId: variant?.id ?? '',
+    variants,
     sku: variant?.sku || fallbackProduct?.sku || '',
+    quantityAvailable: Number.isFinite(Number(quantityAvailable)) ? Number(quantityAvailable) : null,
     availableForSale: node.availableForSale ?? variant?.availableForSale ?? true,
     description:
       node.description ||
@@ -107,6 +122,77 @@ const readStoredValue = (key, fallback) => {
   } catch {
     return fallback
   }
+}
+
+const pendingCheckoutKey = 'elura-pending-checkout'
+const lastCheckoutKey = 'elura-last-checkout'
+const cartOptionsKey = 'elura-cart-options'
+const cartStorageKeys = [
+  'elura-cart',
+  'elura-cart-cache',
+  'elura-cart-state',
+  'elura-persisted-cart',
+]
+
+const conversionFallback = {
+  freeShippingThreshold: 250,
+  giftWrapEnabled: true,
+  giftWrapPrice: 5,
+  giftWrapVariantId: import.meta.env.VITE_GIFT_WRAP_VARIANT_ID || '',
+  lowStockThreshold: 5,
+  ukDeliveryLabel: '2-4 working days',
+  internationalDeliveryLabel: '5-10 working days',
+}
+
+const initialCartOptions = {
+  giftWrap: false,
+  giftMessage: '',
+  recoveryEmail: '',
+}
+
+const writeStorageValue = (storage, key, value) => {
+  try {
+    storage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Ignore storage failures so checkout can continue.
+  }
+}
+
+const removeStorageValue = (storage, key) => {
+  try {
+    storage.removeItem(key)
+  } catch {
+    // Ignore storage failures so cleanup does not break the UI.
+  }
+}
+
+const readStorageValue = (storage, key, fallback = null) => {
+  try {
+    const value = storage.getItem(key)
+
+    return value ? JSON.parse(value) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+const normalizeCartItem = (product, quantity = 1) => ({
+  ...product,
+  quantity,
+})
+
+const mergeCartItem = (items, product, quantity = 1) => {
+  const existing = items.find((item) => item.id === product.id)
+
+  if (existing) {
+    return items.map((item) =>
+      item.id === product.id
+        ? { ...item, quantity: item.quantity + quantity }
+        : item,
+    )
+  }
+
+  return [...items, normalizeCartItem(product, quantity)]
 }
 
 const ensureFirebaseReady = () => {
@@ -176,9 +262,13 @@ function StoreProvider({ children }) {
   const [wishlistIds, setWishlistIds] = useState(() =>
     readStoredValue('elura-wishlist', []),
   )
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState(() => getRecentlyViewedIds())
   const [user, setUser] = useState(() => readStoredValue('elura-user', null))
+  const [cartOptions, setCartOptions] = useState(() => readStoredValue(cartOptionsKey, initialCartOptions))
+  const [conversionSettings, setConversionSettings] = useState(conversionFallback)
   const [isAuthReady, setIsAuthReady] = useState(!hasFirebaseConfig)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [checkoutError, setCheckoutError] = useState('')
 
   useEffect(() => {
     window.localStorage.setItem('elura-cart', JSON.stringify(cartItems))
@@ -187,6 +277,40 @@ function StoreProvider({ children }) {
   useEffect(() => {
     window.localStorage.setItem('elura-wishlist', JSON.stringify(wishlistIds))
   }, [wishlistIds])
+
+  useEffect(() => {
+    window.localStorage.setItem(cartOptionsKey, JSON.stringify(cartOptions))
+  }, [cartOptions])
+
+  useEffect(() => {
+    saveAbandonedCartState({
+      cartItems,
+      email: cartOptions.recoveryEmail || user?.email || '',
+      subtotal: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+    })
+  }, [cartItems, cartOptions.recoveryEmail, user?.email])
+
+  useEffect(() => {
+    const unsubscribe = subscribeCmsDoc(
+      'conversion',
+      conversionFallback,
+      setConversionSettings,
+    )
+
+    return unsubscribe
+  }, [])
+
+  useEffect(() => {
+    const onRecentlyViewedUpdated = () => {
+      setRecentlyViewedIds(getRecentlyViewedIds())
+    }
+
+    window.addEventListener('elura-recently-viewed-updated', onRecentlyViewedUpdated)
+
+    return () => {
+      window.removeEventListener('elura-recently-viewed-updated', onRecentlyViewedUpdated)
+    }
+  }, [])
 
   useEffect(() => {
     if (user) {
@@ -241,6 +365,8 @@ function StoreProvider({ children }) {
     (total, item) => total + item.price * item.quantity,
     0,
   )
+  const giftWrapPrice = Number(conversionSettings.giftWrapPrice || 0)
+  const cartTotal = cartSubtotal + (cartOptions.giftWrap ? giftWrapPrice : 0)
 
   const wishlistProducts = products.filter((product) => wishlistIds.includes(product.id))
   const homeFeaturedProducts = fallbackHomeFeaturedProducts
@@ -255,30 +381,40 @@ function StoreProvider({ children }) {
     }
   }
 
-  const openCart = () => setIsCartOpen(true)
-  const closeCart = () => setIsCartOpen(false)
+  const openCart = useCallback(() => setIsCartOpen(true), [])
+  const closeCart = useCallback(() => setIsCartOpen(false), [])
 
   const addToCart = (product, quantity = 1, options = {}) => {
     const { openDrawer = true } = options
 
-    setCartItems((current) => {
-      const existing = current.find((item) => item.id === product.id)
-
-      if (existing) {
-        return current.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item,
-        )
-      }
-
-      return [...current, { ...product, quantity }]
+    setCartItems((current) => mergeCartItem(current, product, quantity))
+    trackConversionEvent('add_to_cart', {
+      product_id: product.shopifyProductId || product.id,
+      item_name: product.name,
+      value: product.price * quantity,
+      currency: product.currencyCode || 'GBP',
+      quantity,
     })
 
     if (openDrawer) {
       openCart()
     }
   }
+
+  const updateCartOptions = useCallback((nextOptions) => {
+    setCartOptions((current) => ({
+      ...current,
+      ...nextOptions,
+      giftMessage:
+        typeof nextOptions.giftMessage === 'string'
+          ? nextOptions.giftMessage.slice(0, 250)
+          : current.giftMessage,
+    }))
+  }, [])
+
+  const trackRecentlyViewedProduct = useCallback((productId) => {
+    setRecentlyViewedIds(saveRecentlyViewedProduct(productId))
+  }, [])
 
   const updateCartQuantity = (productId, nextQuantity) => {
     if (nextQuantity <= 0) {
@@ -299,12 +435,206 @@ function StoreProvider({ children }) {
 
   const clearCart = () => setCartItems([])
 
+  const clearAllCartSources = useCallback(() => {
+    setCartItems([])
+
+    cartStorageKeys.forEach((key) => {
+      removeStorageValue(window.localStorage, key)
+      removeStorageValue(window.sessionStorage, key)
+    })
+    removeStorageValue(window.localStorage, pendingCheckoutKey)
+    removeStorageValue(window.sessionStorage, pendingCheckoutKey)
+    removeStorageValue(window.localStorage, lastCheckoutKey)
+    removeStorageValue(window.sessionStorage, lastCheckoutKey)
+
+    window.dispatchEvent(new CustomEvent('elura-cart-cleared'))
+  }, [])
+
+  const redirectToLoginForCheckout = useCallback((checkoutState) => {
+    writeStorageValue(window.sessionStorage, pendingCheckoutKey, checkoutState)
+    writeStorageValue(window.localStorage, pendingCheckoutKey, checkoutState)
+    window.location.assign('/login?redirectTo=/checkout&checkout=1')
+  }, [])
+
+  const checkout = useCallback(async ({
+    action = 'checkout',
+    discountCodes = [],
+    items,
+  } = {}) => {
+    const checkoutItems = items?.length ? items : cartItems
+    const checkoutState = {
+      action,
+      cartItems: checkoutItems,
+      createdAt: new Date().toISOString(),
+      returnTo: '/checkout',
+    }
+
+    setCheckoutError('')
+
+    if (!checkoutItems.length) {
+      throw new Error('Your cart is empty.')
+    }
+
+    const firebaseEmail = auth?.currentUser?.email || ''
+    const recoveryEmail = cartOptions.recoveryEmail || firebaseEmail
+
+    saveAbandonedCartState({
+      cartItems: checkoutItems,
+      email: recoveryEmail,
+      subtotal: cartSubtotal,
+    })
+    trackConversionEvent('begin_checkout', {
+      value: cartTotal,
+      currency: checkoutItems[0]?.currencyCode || 'GBP',
+      item_count: checkoutItems.reduce((total, item) => total + item.quantity, 0),
+      has_gift_wrap: Boolean(cartOptions.giftWrap),
+    })
+
+    if (!firebaseEmail) {
+      redirectToLoginForCheckout(checkoutState)
+      return null
+    }
+
+    const checkoutLines = [...checkoutItems]
+    const giftWrapVariantId =
+      conversionSettings.giftWrapVariantId ||
+      import.meta.env.VITE_GIFT_WRAP_VARIANT_ID ||
+      ''
+
+    if (cartOptions.giftWrap && giftWrapVariantId) {
+      checkoutLines.push({
+        id: 'elura-gift-wrap',
+        merchandiseId: giftWrapVariantId,
+        quantity: 1,
+        attributes: [
+          {
+            key: 'Gift wrap',
+            value: 'Yes',
+          },
+        ],
+      })
+    }
+
+    const checkoutCart = await createShopifyCart({
+      items: checkoutLines,
+      email: firebaseEmail,
+      discountCodes,
+      prefillBuyerEmail: true,
+      attributes: [
+        {
+          key: 'Gift wrap requested',
+          value: cartOptions.giftWrap ? 'Yes' : 'No',
+        },
+        {
+          key: 'Gift wrap charge configured',
+          value: cartOptions.giftWrap ? String(giftWrapPrice) : '0',
+        },
+      ],
+      note: cartOptions.giftMessage?.trim()
+        ? `Gift message: ${cartOptions.giftMessage.trim()}`
+        : '',
+    })
+
+    const lastCheckout = {
+      action,
+      buyerEmail: firebaseEmail,
+      cartId: checkoutCart.id,
+      checkoutUrl: checkoutCart.checkoutUrl,
+      cartItems: checkoutItems,
+      createdAt: checkoutState.createdAt,
+      status: 'redirected-to-shopify',
+    }
+
+    writeStorageValue(window.localStorage, lastCheckoutKey, lastCheckout)
+    writeStorageValue(window.sessionStorage, lastCheckoutKey, lastCheckout)
+    removeStorageValue(window.localStorage, pendingCheckoutKey)
+    removeStorageValue(window.sessionStorage, pendingCheckoutKey)
+
+    window.location.assign(checkoutCart.checkoutUrl)
+
+    return checkoutCart
+  }, [cartItems, cartOptions, cartSubtotal, cartTotal, conversionSettings.giftWrapVariantId, giftWrapPrice, redirectToLoginForCheckout])
+
+  const buyNow = useCallback(async (product, quantity = 1) => {
+    const nextCart = mergeCartItem(cartItems, product, quantity)
+
+    setCartItems(nextCart)
+    closeCart()
+
+    return checkout({
+      action: 'buy-now',
+      items: nextCart,
+    })
+  }, [cartItems, checkout, closeCart])
+
+  const finalizeReturnedCheckout = useCallback(async () => {
+    if (!user?.email) return
+
+    const pendingCheckout =
+      readStorageValue(window.localStorage, lastCheckoutKey) ||
+      readStorageValue(window.sessionStorage, lastCheckoutKey)
+
+    if (!pendingCheckout?.createdAt || pendingCheckout.status === 'completed') {
+      return
+    }
+
+    try {
+      const payload = await getCustomerOrders()
+      const checkoutStartedAt = new Date(pendingCheckout.createdAt).getTime() - 5 * 60_000
+      const matchingOrder = payload.orders?.find((order) => {
+        const processedAt = new Date(order.processedAt || 0).getTime()
+
+        return processedAt >= checkoutStartedAt
+      })
+
+      if (!matchingOrder) {
+        return
+      }
+
+      trackConversionEvent('purchase', {
+        order_id: matchingOrder.orderId,
+        value: pendingCheckout.cartItems?.reduce(
+          (total, item) => total + Number(item.price || 0) * Number(item.quantity || 0),
+          0,
+        ) || 0,
+        currency: 'GBP',
+      })
+      clearAllCartSources()
+      writeStorageValue(window.sessionStorage, 'elura-last-completed-order', {
+        orderId: matchingOrder.orderId,
+        orderName: matchingOrder.name,
+        completedAt: new Date().toISOString(),
+      })
+      window.dispatchEvent(new CustomEvent('elura-orders-refresh'))
+    } catch (error) {
+      setCheckoutError(error.message || 'Unable to refresh checkout status.')
+    }
+  }, [clearAllCartSources, user?.email])
+
+  useEffect(() => {
+    finalizeReturnedCheckout()
+
+    const onPageShow = () => finalizeReturnedCheckout()
+    const onFocus = () => finalizeReturnedCheckout()
+
+    window.addEventListener('pageshow', onPageShow)
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      window.removeEventListener('pageshow', onPageShow)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [finalizeReturnedCheckout])
+
   const toggleWishlist = (productId) => {
     setWishlistIds((current) =>
       current.includes(productId)
         ? current.filter((id) => id !== productId)
         : [...current, productId],
     )
+    trackConversionEvent('wishlist', {
+      product_id: productId,
+    })
   }
 
   const login = async ({ email, password }) => {
@@ -372,23 +702,31 @@ function StoreProvider({ children }) {
         cartItems,
         cartCount,
         cartSubtotal,
+        cartTotal,
+        cartOptions,
+        conversionSettings,
         isCartOpen,
         wishlistIds,
         wishlistProducts,
         user,
-        orders: accountOrders,
         openCart,
         closeCart,
         addToCart,
         updateCartQuantity,
         removeFromCart,
         clearCart,
+        updateCartOptions,
+        checkout,
+        checkoutError,
+        buyNow,
         toggleWishlist,
         login,
         signup,
         googleLogin,
         forgotPassword,
         logout,
+        recentlyViewedIds,
+        trackRecentlyViewedProduct,
       }}
     >
       {children}

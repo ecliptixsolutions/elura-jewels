@@ -1,7 +1,11 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, MessageCircleMore, MapPin } from 'lucide-react'
+import { Mail, MapPin } from 'lucide-react'
 import logoImage from '../assets/brand/elura-logo.svg'
 import { contactDetails } from '../data/siteData.js'
+import { SocialPlatformIcon } from '../components/SocialPlatformIcon.jsx'
+import { subscribeCmsDoc } from '../lib/cms.js'
+import { hasSupportedSocialIcon } from '../lib/socialPlatforms.js'
 
 const shopLinks = [
   { label: 'Necklaces', href: '/shop?category=Necklaces' },
@@ -21,10 +25,32 @@ const quickLinks = [
 ]
 
 function FooterSection() {
+  const [socialMedia, setSocialMedia] = useState({ items: [] })
+
+  useEffect(() => {
+    const unsubscribe = subscribeCmsDoc(
+      'socialMedia',
+      { items: [] },
+      setSocialMedia,
+    )
+
+    return unsubscribe
+  }, [])
+
+  const socialLinks = useMemo(
+    () =>
+      (socialMedia.items || [])
+        .filter((item) => item.enabled !== false && item.platform && item.url && hasSupportedSocialIcon(item.platform))
+        .sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
+    [socialMedia.items],
+  )
+
+  const hasSocialLinks = socialLinks.length > 0
+
   return (
     <footer className="border-t border-black/8 bg-white/45">
-      <div className="section-shell py-16 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="section-shell py-16 pb-28 sm:py-20">
+        <div className="grid gap-10 md:max-[1199px]:grid-cols-2 min-[1200px]:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-4 flex items-center gap-3">
               <img
@@ -44,9 +70,25 @@ function FooterSection() {
               Modern and contemporary jewellery with a clean, premium feel shaped for
               everyday luxury and occasion dressing.
             </p>
+            {hasSocialLinks ? (
+              <div className="mt-5 hidden flex-wrap gap-3 min-[1200px]:flex">
+                {socialLinks.map((item) => (
+                  <a
+                    key={`desktop-${item.id || item.platform}`}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`ELURA on ${item.platform}`}
+                    className="footer-social-icon inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-ink transition duration-[250ms] ease-out hover:-translate-y-[3px] hover:scale-[1.08] hover:border-gold hover:text-gold hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 active:scale-105"
+                  >
+                    <SocialPlatformIcon platform={item.platform} className="footer-social-svg" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-2 md:max-[1199px]:contents min-[1200px]:grid-cols-3">
             <div>
               <p className="section-eyebrow">SHOP</p>
               <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
@@ -117,15 +159,34 @@ function FooterSection() {
 
   </div>
 </div>
+            {hasSocialLinks ? (
+              <div className="md:max-[1199px]:col-span-2 min-[1200px]:hidden">
+                <p className="section-eyebrow text-left">SOCIAL</p>
+                <div className="mt-4 flex flex-wrap items-start justify-start gap-3">
+                  {socialLinks.map((item) => (
+                    <a
+                      key={item.id || item.platform}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`ELURA on ${item.platform}`}
+                      className="footer-social-icon inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-ink transition duration-300 ease-out hover:-translate-y-[3px] hover:scale-[1.08] hover:border-gold hover:text-gold hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 active:scale-105"
+                    >
+                      <SocialPlatformIcon platform={item.platform} className="footer-social-svg" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
-        <div className="mt-14 grid gap-3 border-t border-black/8 pt-6 text-[11px] uppercase leading-6 tracking-[0.12em] text-muted sm:grid-cols-2 sm:items-center sm:tracking-[0.18em]">
+        <div className="mt-14 grid gap-3 border-t border-black/8 pt-6 text-center text-[11px] uppercase leading-6 tracking-[0.12em] text-muted md:grid-cols-2 md:items-center md:tracking-[0.18em]">
           <a
   href="https://ecliptixsolutions.com/"
   target="_blank"
   rel="noopener noreferrer"
-  className="link-animated footer-link break-words text-center transition hover:text-gold sm:justify-self-start sm:text-left"
+  className="link-animated footer-link break-words text-center transition hover:text-gold md:justify-self-start md:text-left"
 >
   Designed &amp; Developed by Ecliptix Solutions
 </a>

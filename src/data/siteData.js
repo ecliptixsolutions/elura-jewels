@@ -602,20 +602,3 @@ export const contactDetails = {
   phone: '+44 7440482483',
   location: 'West London, UK',
 }
-
-export const accountOrders = [
-  {
-    id: 'EL-20481',
-    date: '02 Mar 2026',
-    status: 'Delivered',
-    total: 329,
-    items: ['Aurelia Emerald Collar'],
-  },
-  {
-    id: 'EL-19844',
-    date: '18 Jan 2026',
-    status: 'Delivered',
-    total: 189,
-    items: ['Liora Emerald Studs'],
-  },
-]

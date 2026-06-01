@@ -1,123 +1,85 @@
 import { useEffect, useState } from 'react'
-
 import axios from 'axios'
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-} from 'firebase/firestore'
+import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
 
-import { db } from '../lib/firebase'
+const emptyBanner = {
+  type: 'image',
+  file: null,
+  preview: '',
+  url: '',
+  heading: '',
+  description: '',
+  buttonText: '',
+  buttonLink: '',
+  label: '',
+  overlayStrength: 28,
+  textAlignment: 'left',
+}
+
+const heroFallback = {
+  rotational: true,
+  banners: [emptyBanner],
+}
 
 function AdminBannersPage() {
-  const [isRotational, setIsRotational] =
-    useState(false)
-
-  const [loading, setLoading] =
-    useState(false)
-
-  const [banners, setBanners] = useState([
-    {
-      type: 'image',
-      file: null,
-      preview: '',
-      url: '',
-    },
-  ])
+  const [isRotational, setIsRotational] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [banners, setBanners] = useState([emptyBanner])
 
   useEffect(() => {
-    loadBanners()
+    const unsubscribe = subscribeCmsDoc(
+      'hero',
+      heroFallback,
+      (data) => {
+        setIsRotational(Boolean(data.rotational))
+        setBanners(
+          data.banners?.length
+            ? data.banners.map((banner) => ({
+                ...emptyBanner,
+                ...banner,
+                file: null,
+                preview: '',
+              }))
+            : [emptyBanner],
+        )
+      },
+    )
+
+    return unsubscribe
   }, [])
 
-  const loadBanners = async () => {
-    try {
-      const snapshot = await getDoc(
-        doc(db, 'heroBanners', 'homepageHero'),
-      )
-
-      if (snapshot.exists()) {
-        const data = snapshot.data()
-
-        setIsRotational(
-          data.rotational || false,
-        )
-
-        setBanners(data.banners || [])
-      }
-    } catch (error) {
-      console.log(error)
-    }
+  const updateBanner = (index, field, value) => {
+    setBanners((current) =>
+      current.map((banner, bannerIndex) =>
+        bannerIndex === index ? { ...banner, [field]: value } : banner,
+      ),
+    )
   }
 
-  const handleTypeChange = (
-    index,
-    type,
-  ) => {
-    const updated = [...banners]
-
-    updated[index].type = type
-
-    setBanners(updated)
-  }
-
-  const handleFileChange = (
-    index,
-    file,
-  ) => {
+  const handleFileChange = (index, file) => {
     if (!file) return
 
-    const updated = [...banners]
-
-    updated[index].file = file
-
-    updated[index].preview =
-      URL.createObjectURL(file)
-
-    setBanners(updated)
+    updateBanner(index, 'file', file)
+    updateBanner(index, 'preview', URL.createObjectURL(file))
   }
 
   const addBanner = () => {
-    if (banners.length >= 5) return
-
-    setBanners([
-      ...banners,
-      {
-        type: 'image',
-        file: null,
-        preview: '',
-        url: '',
-      },
-    ])
+    setBanners((current) => (current.length >= 5 ? current : [...current, { ...emptyBanner }]))
   }
 
   const removeBanner = (index) => {
-    const updated = banners.filter(
-      (_, i) => i !== index,
-    )
-
-    setBanners(updated)
+    setBanners((current) => current.filter((_, bannerIndex) => bannerIndex !== index))
   }
 
-  const uploadToCloudinary = async (
-    file,
-    resourceType = 'image',
-  ) => {
+  const uploadToCloudinary = async (file, resourceType = 'image') => {
     const formData = new FormData()
 
     formData.append('file', file)
-
-    formData.append(
-      'upload_preset',
-      import.meta.env
-        .VITE_CLOUDINARY_UPLOAD_PRESET,
-    )
+    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET)
 
     const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${
-        import.meta.env
-          .VITE_CLOUDINARY_CLOUD_NAME
-      }/${resourceType}/upload`,
+      `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
       formData,
     )
 
@@ -125,49 +87,44 @@ function AdminBannersPage() {
   }
 
   const saveBanners = async () => {
-    try {
-      setLoading(true)
+    setLoading(true)
 
+    try {
       const uploadedBanners = []
 
       for (const banner of banners) {
         let mediaUrl = banner.url
 
         if (banner.file) {
-          mediaUrl =
-            await uploadToCloudinary(
-              banner.file,
-              banner.type === 'video'
-                ? 'video'
-                : 'image',
-            )
+          mediaUrl = await uploadToCloudinary(
+            banner.file,
+            banner.type === 'video' ? 'video' : 'image',
+          )
         }
 
-        uploadedBanners.push({
-          type: banner.type,
-          url: mediaUrl,
-        })
+        if (mediaUrl) {
+          uploadedBanners.push({
+            type: banner.type,
+            url: mediaUrl,
+            heading: banner.heading.trim(),
+            description: banner.description.trim(),
+            buttonText: banner.buttonText.trim(),
+            buttonLink: banner.buttonLink.trim(),
+            label: banner.label.trim(),
+            overlayStrength: Number(banner.overlayStrength || 28),
+            textAlignment: banner.textAlignment,
+          })
+        }
       }
 
-      await setDoc(
-        doc(
-          db,
-          'heroBanners',
-          'homepageHero',
-        ),
-        {
-          rotational: isRotational,
-          banners: uploadedBanners,
-        },
-      )
+      await saveCmsDoc('hero', {
+        rotational: isRotational,
+        banners: uploadedBanners,
+      })
 
-      alert(
-        'Hero banners saved successfully.',
-      )
+      window.alert('Hero banners saved successfully.')
     } catch (error) {
-      console.log(error)
-
-      alert('Something went wrong.')
+      window.alert(error.message || 'Failed to save hero banners.')
     } finally {
       setLoading(false)
     }
@@ -176,256 +133,116 @@ function AdminBannersPage() {
   return (
     <div className="section-spacing">
       <div className="section-shell">
-
-        <p className="section-eyebrow">
-          HOMEPAGE CMS
-        </p>
-
-        <h1 className="mt-3 text-5xl">
-          Hero Banner Management
-        </h1>
-
+        <p className="section-eyebrow">Homepage CMS</p>
+        <h1 className="mt-3 text-5xl">Hero Banner Management</h1>
         <p className="mt-4 max-w-3xl text-muted">
-          Upload luxury homepage hero
-          banners, cinematic visuals,
-          responsive imagery, motion
-          videos, and rotational slides.
+          Manage homepage hero media, text, calls to action, overlay strength, and slide alignment.
         </p>
 
-        <div className="mt-12 rounded-[28px] border border-black/8 bg-white p-8">
-
-          {/* TOGGLE */}
+        <div className="mt-12 rounded-[8px] border border-black/8 bg-white p-8">
           <label className="flex items-center gap-3">
-
             <input
               type="checkbox"
               checked={isRotational}
-              onChange={(event) =>
-                setIsRotational(
-                  event.target.checked,
-                )
-              }
+              onChange={(event) => setIsRotational(event.target.checked)}
             />
-
-            <span className="text-sm font-medium">
-              Enable Rotational Hero
-              Banner
-            </span>
-
+            <span className="text-sm font-medium">Enable rotational hero banner</span>
           </label>
 
-          {/* BANNERS */}
           <div className="mt-10 space-y-8">
+            {banners.map((banner, index) => (
+              <div key={`hero-${index}`} className="rounded-[8px] border border-black/8 p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-2xl">Hero Slide {index + 1}</h2>
+                  {banners.length > 1 ? (
+                    <button type="button" onClick={() => removeBanner(index)} className="text-sm text-red-600">
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
 
-            {banners.map(
-              (banner, index) => (
-                <div
-                  key={index}
-                  className="rounded-[24px] border border-black/8 p-8"
-                >
-
-                  <div className="flex items-center justify-between">
-
-                    <h2 className="text-2xl">
-                      Hero Banner{' '}
-                      {index + 1}
-                    </h2>
-
-                    {banners.length >
-                      1 && (
-                      <button
-                        onClick={() =>
-                          removeBanner(
-                            index,
-                          )
-                        }
-                        className="text-sm text-red-500"
-                      >
-                        Remove
-                      </button>
-                    )}
-
-                  </div>
-
-                  {/* TYPE */}
-                  <div className="mt-6 flex gap-8">
-
-                    <label className="flex items-center gap-2">
-
-                      <input
-                        type="radio"
-                        checked={
-                          banner.type ===
-                          'image'
-                        }
-                        onChange={() =>
-                          handleTypeChange(
-                            index,
-                            'image',
-                          )
-                        }
-                      />
-
-                      <span className="text-sm">
-                        Image
-                      </span>
-
-                    </label>
-
-                    <label className="flex items-center gap-2">
-
-                      <input
-                        type="radio"
-                        checked={
-                          banner.type ===
-                          'video'
-                        }
-                        onChange={() =>
-                          handleTypeChange(
-                            index,
-                            'video',
-                          )
-                        }
-                      />
-
-                      <span className="text-sm">
-                        Video
-                      </span>
-
-                    </label>
-
-                  </div>
-
-                  {/* NOTE CARD */}
-                  <div className="mt-8 rounded-[18px] border border-black/8 bg-[#faf8f4] p-4">
-
-                    <p className="text-sm font-semibold">
-                      Supported Formats
-                    </p>
-
-                    <p className="mt-2 text-sm text-muted">
-                      PNG, JPG, JPEG,
-                      WEBP, MP4
-                    </p>
-
-                    <p className="mt-4 text-sm font-semibold">
-                      Recommended Sizes
-                    </p>
-
-                    <div className="mt-2 space-y-1 text-sm text-muted">
-
-                      <p>
-                        Desktop:
-                        1920 × 1080
-                      </p>
-
-                      <p>
-                        Tablet:
-                        1400 × 1200
-                      </p>
-
-                      <p>
-                        Mobile:
-                        1080 × 1350
-                      </p>
-
+                <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                  <div className="space-y-5">
+                    <div className="flex gap-6">
+                      {['image', 'video'].map((type) => (
+                        <label key={type} className="flex items-center gap-2 text-sm capitalize">
+                          <input
+                            type="radio"
+                            checked={banner.type === type}
+                            onChange={() => updateBanner(index, 'type', type)}
+                          />
+                          {type}
+                        </label>
+                      ))}
                     </div>
-
-                  </div>
-
-                  {/* FILE */}
-                  <div className="mt-6">
-
-                    <p className="text-sm font-medium">
-                      Upload Banner{' '}
-                      {
-                        banner.type
-                      }
-                    </p>
 
                     <input
                       type="file"
-                      accept={
-                        banner.type ===
-                        'image'
-                          ? 'image/png,image/jpeg,image/jpg,image/webp'
-                          : 'video/mp4'
-                      }
-                      className="mt-4"
-                      onChange={(e) =>
-                        handleFileChange(
-                          index,
-                          e.target
-                            .files[0],
-                        )
-                      }
+                      accept={banner.type === 'image' ? 'image/png,image/jpeg,image/jpg,image/webp' : 'video/mp4'}
+                      onChange={(event) => handleFileChange(index, event.target.files?.[0])}
                     />
 
-                  </div>
-
-                  {/* LIVE PREVIEW */}
-                  {(banner.preview ||
-                    banner.url) && (
-                    <div className="mt-8 overflow-hidden rounded-[24px] border border-black/8 bg-[#f4efe7]">
-
-                      <div className="relative aspect-[16/9] overflow-hidden">
-
-                        {banner.type ===
-                        'image' ? (
+                    {(banner.preview || banner.url) ? (
+                      <div className="overflow-hidden rounded-[8px] bg-linen">
+                        {banner.type === 'image' ? (
                           <img
-                            src={
-                              banner.preview ||
-                              banner.url
-                            }
+                            src={banner.preview || banner.url}
                             alt=""
-                            className="h-full w-full object-cover"
+                            className="aspect-video w-full object-cover"
                           />
                         ) : (
                           <video
-                            src={
-                              banner.preview ||
-                              banner.url
-                            }
+                            src={banner.preview || banner.url}
                             controls
-                            className="h-full w-full object-cover"
+                            className="aspect-video w-full object-cover"
                           />
                         )}
-
                       </div>
+                    ) : null}
+                  </div>
 
+                  <div className="grid gap-5">
+                    <input value={banner.label} onChange={(event) => updateBanner(index, 'label', event.target.value)} className="input-shell" placeholder="Slide label" />
+                    <input value={banner.heading} onChange={(event) => updateBanner(index, 'heading', event.target.value)} className="input-shell" placeholder="Headline" />
+                    <textarea value={banner.description} onChange={(event) => updateBanner(index, 'description', event.target.value)} className="input-shell min-h-24 resize-none" placeholder="Description" />
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <input value={banner.buttonText} onChange={(event) => updateBanner(index, 'buttonText', event.target.value)} className="input-shell" placeholder="Button text" />
+                      <input value={banner.buttonLink} onChange={(event) => updateBanner(index, 'buttonLink', event.target.value)} className="input-shell" placeholder="Button link" />
                     </div>
-                  )}
-
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <label className="text-sm text-muted">
+                        Overlay strength
+                        <input
+                          type="range"
+                          min="0"
+                          max="80"
+                          value={banner.overlayStrength}
+                          onChange={(event) => updateBanner(index, 'overlayStrength', event.target.value)}
+                          className="mt-3 w-full"
+                        />
+                      </label>
+                      <select value={banner.textAlignment} onChange={(event) => updateBanner(index, 'textAlignment', event.target.value)} className="input-shell">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              ),
-            )}
-
+              </div>
+            ))}
           </div>
 
-          {/* ADD */}
-          {isRotational &&
-            banners.length < 5 && (
-              <button
-                onClick={addBanner}
-                className="mt-8 rounded-full border border-black/10 px-6 py-3 text-sm"
-              >
-                Add Banner
-              </button>
-            )}
+          {isRotational && banners.length < 5 ? (
+            <button type="button" onClick={addBanner} className="btn-secondary mt-8">
+              Add Slide
+            </button>
+          ) : null}
 
-          {/* SAVE */}
-          <button
-            onClick={saveBanners}
-            disabled={loading}
-            className="btn-primary mt-10"
-          >
-            {loading
-              ? 'Saving...'
-              : 'Save Hero Banners'}
+          <button type="button" onClick={saveBanners} disabled={loading} className="btn-primary mt-8">
+            {loading ? 'Saving...' : 'Save Hero Banners'}
           </button>
-
         </div>
-
       </div>
     </div>
   )

@@ -1,101 +1,60 @@
 import { Link } from 'react-router-dom'
 
+const dashboardCards = [
+  {
+    eyebrow: 'Homepage',
+    title: 'Hero Banner Management',
+    description: 'Manage media, hero copy, overlay, alignment, and calls to action.',
+    href: '/admin/banners',
+  },
+  {
+    eyebrow: 'Collections',
+    title: 'Collections CMS',
+    description: 'Control the homepage collection section while collections sync from Shopify.',
+    href: '/admin/collections',
+  },
+  {
+    eyebrow: 'Marketing',
+    title: 'Customer Marketing',
+    description: 'View Shopify customers, subscribers, marketing consent, and Shopify Email shortcuts.',
+    href: '/admin/marketing',
+  },
+  {
+    eyebrow: 'Footer',
+    title: 'Social Media CMS',
+    description: 'Manage platform links, ordering, visibility, and footer social icons.',
+    href: '/admin/social-media',
+  },
+  {
+    eyebrow: 'Settings',
+    title: 'Announcement and Cart',
+    description: 'Manage announcement bar content and cart drawer reassurance messages.',
+    href: '/admin/settings',
+  },
+]
+
 function AdminDashboard() {
   return (
     <div className="section-spacing">
       <div className="section-shell">
+        <p className="section-eyebrow">Admin Panel</p>
+        <h1 className="mt-3 text-5xl">ELURA Dashboard</h1>
+        <p className="mt-4 max-w-2xl text-muted">
+          Manage storefront CMS content, Shopify-powered commerce surfaces, and customer marketing flows.
+        </p>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="section-eyebrow">
-              ADMIN PANEL
-            </p>
-
-            <h1 className="mt-3 text-5xl">
-              ELURA Dashboard
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-muted">
-              Manage homepage visuals, collections,
-              about section, and CTA content.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-
-          <Link
-            to="/admin/banners"
-            className="rounded-[24px] border border-black/8 bg-white/70 p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(27,24,19,0.08)]"
-          >
-            <p className="section-eyebrow">
-              HOMEPAGE
-            </p>
-
-            <h2 className="mt-3 text-2xl">
-              Hero Banner Management
-            </h2>
-
-            <p className="mt-3 text-sm text-muted">
-              Manage homepage hero banners, videos,
-              and rotational sliders.
-            </p>
-          </Link>
-
-          <Link
-            to="/admin/collections"
-            className="rounded-[24px] border border-black/8 bg-white/70 p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(27,24,19,0.08)]"
-          >
-            <p className="section-eyebrow">
-              COLLECTIONS
-            </p>
-
-            <h2 className="mt-3 text-2xl">
-              Collections Management
-            </h2>
-
-            <p className="mt-3 text-sm text-muted">
-              Manage homepage collection category
-              images and descriptions.
-            </p>
-          </Link>
-
-          <Link
-            to="/admin/about"
-            className="rounded-[24px] border border-black/8 bg-white/70 p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(27,24,19,0.08)]"
-          >
-            <p className="section-eyebrow">
-              ABOUT
-            </p>
-
-            <h2 className="mt-3 text-2xl">
-              About ELURA Management
-            </h2>
-
-            <p className="mt-3 text-sm text-muted">
-              Manage about section content,
-              images, and descriptions.
-            </p>
-          </Link>
-
-          <Link
-            to="/admin/cta"
-            className="rounded-[24px] border border-black/8 bg-white/70 p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(27,24,19,0.08)]"
-          >
-            <p className="section-eyebrow">
-              CTA SECTION
-            </p>
-
-            <h2 className="mt-3 text-2xl">
-              CTA Banner Management
-            </h2>
-
-            <p className="mt-3 text-sm text-muted">
-              Manage footer CTA banners,
-              videos, and rotational sliders.
-            </p>
-          </Link>
-
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {dashboardCards.map((card) => (
+            <Link
+              key={card.href}
+              to={card.href}
+              className="rounded-[8px] border border-black/8 bg-white/70 p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(27,24,19,0.08)]"
+            >
+              <p className="section-eyebrow">{card.eyebrow}</p>
+              <h2 className="mt-3 text-2xl">{card.title}</h2>
+              <p className="mt-3 text-sm text-muted">{card.description}</p>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

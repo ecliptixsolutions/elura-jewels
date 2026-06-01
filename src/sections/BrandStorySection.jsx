@@ -1,31 +1,22 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
-import {
-  doc,
-  onSnapshot,
-} from 'firebase/firestore'
-
-import { db } from '../lib/firebase'
-
 import Reveal from '../components/Reveal.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
+import { subscribeCmsDoc } from '../lib/cms.js'
 
 function BrandStorySection({ story }) {
   const [aboutMedia, setAboutMedia] =
     useState(null)
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      doc(db, 'cms', 'about'),
-      (snapshot) => {
-        if (snapshot.exists()) {
-          setAboutMedia(snapshot.data())
-        }
-      },
+    const unsubscribe = subscribeCmsDoc(
+      'about',
+      null,
+      setAboutMedia,
     )
 
-    return () => unsubscribe()
+    return unsubscribe
   }, [])
 
   return (
