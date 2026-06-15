@@ -98,8 +98,8 @@ function Header({ onCartOpen, announcement }) {
                 className="logo block h-[40px] w-auto object-contain bg-transparent sm:h-[44px] lg:h-[52px]"
               />
 
-              <span className="font-serif text-[15px] font-medium uppercase tracking-[0.1em] text-gold sm:text-[17px] lg:text-[21px]">
-                ELURA
+              <span className="whitespace-nowrap font-serif text-[13px] font-medium uppercase tracking-[0.12em] text-gold sm:text-[15px] lg:text-[17px]">
+                ELURA JEWELS
               </span>
             </Link>
 

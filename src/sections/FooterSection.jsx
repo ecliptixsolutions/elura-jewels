@@ -62,8 +62,8 @@ function FooterSection() {
                 height="80"
                 className="footer-logo h-14 w-auto object-contain bg-transparent sm:h-16"
               />
-              <span className="font-serif text-[19px] uppercase tracking-[0.12em] text-gold sm:text-[21px]">
-                ELURA
+              <span className="whitespace-nowrap font-serif text-[17px] uppercase tracking-[0.12em] text-gold sm:text-[19px]">
+                ELURA JEWELS
               </span>
             </div>
             <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">
