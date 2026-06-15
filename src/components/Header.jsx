@@ -335,6 +335,7 @@ function Header({ onCartOpen, announcement }) {
                   }
                   className="line-link w-full justify-between"
                 >
+                  <Heart className="h-4 w-4" />
                   Wishlist
                 </Link>
 
@@ -346,6 +347,7 @@ function Header({ onCartOpen, announcement }) {
                   }}
                   className="line-link w-full justify-between"
                 >
+                  <ShoppingBag className="h-4 w-4" />
                   Cart
                 </button>
 
@@ -354,6 +356,7 @@ function Header({ onCartOpen, announcement }) {
                   onClick={() => setMenuOpen(false)}
                   className="line-link w-full justify-between"
                 >
+                  <UserRound className="h-4 w-4" />
                   Profile
                 </Link>
               </div>

@@ -145,6 +145,10 @@ function AdminSocialMediaPage() {
   }
 
   const deleteItem = (id) => {
+    const item = items.find((entry) => entry.id === id)
+
+    if (!window.confirm(`Delete ${item?.platform || 'this social link'}?`)) return
+
     setItems((current) =>
       current
         .filter((item) => item.id !== id)

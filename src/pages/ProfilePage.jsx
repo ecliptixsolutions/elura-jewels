@@ -277,8 +277,8 @@ function ProfilePage() {
               description="Stored locally on this device, most recent first."
             />
             <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 no-scrollbar md:grid md:grid-cols-4 md:overflow-visible">
-              {recentlyViewedProducts.map((product) => (
-                <div key={product.id} className="w-[64%] flex-none snap-start sm:w-[260px] md:w-auto">
+              {recentlyViewedProducts.map((product, index) => (
+                <div key={`${product.id}-${product.slug || index}`} className="w-[64%] flex-none snap-start sm:w-[260px] md:w-auto">
                   <ProductCard product={product} />
                 </div>
               ))}

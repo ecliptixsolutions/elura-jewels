@@ -65,7 +65,7 @@ const mapShopifyProduct = (node) => {
     materials: fallbackProduct?.materials ?? ['Material details available on request'],
     details: fallbackProduct?.details ?? ['Presented in ELURA packaging'],
     images: buildImages(shopifyImages, fallbackProduct?.images),
-    reviews: fallbackProduct?.reviews ?? [],
+    reviews: [],
   }
 }
 

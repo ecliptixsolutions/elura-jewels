@@ -15,6 +15,8 @@ import {
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const projectRoot = path.resolve(__dirname, '..')
+const distDirectory = path.join(projectRoot, 'dist')
 
 dotenv.config({ path: path.resolve(__dirname, '../.env'), quiet: true })
 
@@ -121,6 +123,27 @@ app.post('/send-email', async (req, res) => {
   }
 })
 
+app.use(express.static(distDirectory, {
+  index: false,
+  maxAge: '1y',
+  immutable: true,
+  setHeaders(response, filePath) {
+    if (filePath.endsWith('index.html')) {
+      response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
+    }
+  },
+}))
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api/') || req.path === '/send-email') {
+    next()
+    return
+  }
+
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
+  res.sendFile(path.join(distDirectory, 'index.html'))
+})
+
 app.listen(port, () => {
-  console.log(`ELURA contact server running on http://localhost:${port}`)
+  console.log(`ELURA website and API running on http://localhost:${port}`)
 })

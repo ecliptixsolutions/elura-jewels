@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
 import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
 
 const newsletterFallback = {
@@ -13,6 +14,10 @@ const newsletterFallback = {
 function AdminNewsletterPage() {
   const [settings, setSettings] = useState(newsletterFallback)
   const [loading, setLoading] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [error, setError] = useState('')
+
+  useUnsavedChanges(dirty)
 
   useEffect(() => {
     const unsubscribe = subscribeCmsDoc(
@@ -25,6 +30,7 @@ function AdminNewsletterPage() {
   }, [])
 
   const updateSetting = (field, value) => {
+    setDirty(true)
     setSettings((current) => ({
       ...current,
       [field]: value,
@@ -32,7 +38,13 @@ function AdminNewsletterPage() {
   }
 
   const saveNewsletter = async () => {
+    if (!settings.heading.trim() || Number(settings.delaySeconds) < 1) {
+      setError('Newsletter heading is required and delay must be at least one second.')
+      return
+    }
+
     setLoading(true)
+    setError('')
 
     try {
       await saveCmsDoc('newsletter', {
@@ -42,6 +54,7 @@ function AdminNewsletterPage() {
         offer: settings.offer.trim(),
         delaySeconds: Number(settings.delaySeconds || 10),
       })
+      setDirty(false)
       window.alert('Newsletter popup settings saved.')
     } catch (error) {
       window.alert(error.message || 'Failed to save newsletter settings.')
@@ -58,6 +71,7 @@ function AdminNewsletterPage() {
         <p className="mt-4 text-muted">
           Newsletter submissions create Shopify customers with marketing consent and the newsletter tag.
         </p>
+        {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-12 rounded-[8px] border border-black/8 bg-white p-8">
           <label className="flex items-center gap-3">
@@ -79,8 +93,8 @@ function AdminNewsletterPage() {
             </label>
           </div>
 
-          <button type="button" onClick={saveNewsletter} disabled={loading} className="btn-primary mt-8">
-            {loading ? 'Saving...' : 'Save Newsletter Popup'}
+          <button type="button" onClick={saveNewsletter} disabled={loading || !dirty} className="btn-primary mt-8">
+            {loading ? 'Saving...' : dirty ? 'Save Newsletter Popup' : 'Saved'}
           </button>
         </div>
       </div>

@@ -1,8 +1,28 @@
-const SHOPIFY_STORE_DOMAIN =
-  import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || 'elura-jewels-2.myshopify.com'
+const normalizeShopifyDomain = (domain = '') =>
+  domain
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/.*$/, '')
+    .trim()
+
+const SHOPIFY_STORE_DOMAIN = normalizeShopifyDomain(
+  import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || 'elura-jewels-2.myshopify.com',
+)
 const SHOPIFY_STOREFRONT_TOKEN = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN || ''
 const SHOPIFY_API_VERSION = import.meta.env.VITE_SHOPIFY_API_VERSION || '2026-04'
 const SHOPIFY_API_ENDPOINT = `https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`
+const hasShopifyStorefrontConfig = Boolean(SHOPIFY_STORE_DOMAIN && SHOPIFY_STOREFRONT_TOKEN)
+let hasLoggedMissingConfig = false
+
+const logShopifyConfigError = (operation) => {
+  if (hasLoggedMissingConfig) {
+    return
+  }
+
+  hasLoggedMissingConfig = true
+  console.error(
+    `Shopify Storefront API is not configured for ${operation}. Add VITE_SHOPIFY_STORE_DOMAIN and VITE_SHOPIFY_STOREFRONT_TOKEN in local and Vercel environments.`,
+  )
+}
 
 const SHOPIFY_PRODUCTS_QUERY = `
   query Products($first: Int!) {
@@ -202,7 +222,8 @@ const SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY = `
 `
 
 async function shopifyStorefrontRequest(query, variables = {}) {
-  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+  if (!hasShopifyStorefrontConfig) {
+    logShopifyConfigError('storefront request')
     throw new Error('Shopify Storefront API configuration is missing.')
   }
 
@@ -250,12 +271,22 @@ async function shopifyStorefrontRequestWithInventoryFallback(query, variables = 
 }
 
 async function getShopifyProducts(first = 50) {
+  if (!hasShopifyStorefrontConfig) {
+    logShopifyConfigError('product loading')
+    return []
+  }
+
   const data = await shopifyStorefrontRequestWithInventoryFallback(SHOPIFY_PRODUCTS_QUERY, { first })
 
   return data?.products?.edges?.map((edge) => edge.node) ?? []
 }
 
 async function getShopifyCollections(first = 20) {
+  if (!hasShopifyStorefrontConfig) {
+    logShopifyConfigError('collection loading')
+    return []
+  }
+
   const data = await shopifyStorefrontRequest(SHOPIFY_COLLECTIONS_QUERY, { first })
 
   return (
@@ -274,6 +305,11 @@ async function getShopifyCollections(first = 20) {
 }
 
 async function getShopifyCollectionByHandle(handle, first = 50) {
+  if (!hasShopifyStorefrontConfig) {
+    logShopifyConfigError('collection detail loading')
+    return null
+  }
+
   const data = await shopifyStorefrontRequestWithInventoryFallback(SHOPIFY_COLLECTION_BY_HANDLE_QUERY, {
     handle,
     first,
@@ -283,7 +319,11 @@ async function getShopifyCollectionByHandle(handle, first = 50) {
 }
 
 async function getShopifyProductRecommendations(productId) {
-  if (!productId) {
+  if (!productId || !hasShopifyStorefrontConfig) {
+    if (!hasShopifyStorefrontConfig) {
+      logShopifyConfigError('recommendation loading')
+    }
+
     return []
   }
 
@@ -302,6 +342,11 @@ async function createShopifyCart({
   attributes = [],
   note = '',
 }) {
+  if (!hasShopifyStorefrontConfig) {
+    logShopifyConfigError('checkout')
+    throw new Error('Shopify checkout is temporarily unavailable. Please try again later.')
+  }
+
   const lines = items
     .filter((item) => (item.variantId || item.merchandiseId) && item.quantity > 0)
     .map((item) => ({
@@ -350,5 +395,6 @@ export {
   getShopifyCollectionByHandle,
   getShopifyProductRecommendations,
   getShopifyProducts,
+  hasShopifyStorefrontConfig,
   SHOPIFY_STORE_DOMAIN,
 }

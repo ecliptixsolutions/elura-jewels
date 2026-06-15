@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-} from 'firebase/firestore'
-
-import { db } from '../lib/firebase'
+import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
+import { getCmsDocData, saveCmsDoc } from '../lib/cms.js'
 
 function AdminCTAPage() {
   const [rotationEnabled, setRotationEnabled] =
@@ -37,6 +32,10 @@ function AdminCTAPage() {
       ctaHref: '',
     },
   ])
+  const [dirty, setDirty] = useState(false)
+  const [error, setError] = useState('')
+
+  useUnsavedChanges(dirty)
 
   useEffect(() => {
     loadCTA()
@@ -44,13 +43,9 @@ function AdminCTAPage() {
 
   const loadCTA = async () => {
     try {
-      const snapshot = await getDoc(
-        doc(db, 'cms', 'ctaBanners'),
-      )
+      const data = await getCmsDocData('ctaBanners', null)
 
-      if (snapshot.exists()) {
-        const data = snapshot.data()
-
+      if (data) {
         setRotationEnabled(
           data.rotationEnabled || false,
         )
@@ -61,8 +56,8 @@ function AdminCTAPage() {
           setBanners(data.banners)
         }
       }
-    } catch {
-      window.alert('Failed to load CTA settings.')
+    } catch (error) {
+      window.alert(error.message || 'Failed to load CTA settings.')
     }
   }
 
@@ -95,6 +90,19 @@ function AdminCTAPage() {
     index,
     file,
   ) => {
+    if (!file) return
+
+    const isVideo = banners[index].type === 'video'
+    const validType = isVideo ? file.type === 'video/mp4' : file.type.startsWith('image/')
+    const maximumSize = isVideo ? 25 * 1024 * 1024 : 8 * 1024 * 1024
+
+    if (!validType || file.size > maximumSize) {
+      setError(`Select a valid ${isVideo ? 'MP4 under 25 MB' : 'image under 8 MB'}.`)
+      return
+    }
+
+    setDirty(true)
+    setError('')
     const updated = [...banners]
 
     updated[index].file = file
@@ -110,6 +118,7 @@ function AdminCTAPage() {
     field,
     value,
   ) => {
+    setDirty(true)
     const updated = [...banners]
 
     updated[index][field] =
@@ -127,6 +136,7 @@ function AdminCTAPage() {
       return
     }
 
+    setDirty(true)
     setBanners([
       ...banners,
 
@@ -155,6 +165,9 @@ function AdminCTAPage() {
   const removeBanner = (
     index,
   ) => {
+    if (!window.confirm(`Remove CTA Banner ${index + 1}?`)) return
+
+    setDirty(true)
     const updated =
       banners.filter(
         (_, i) =>
@@ -165,8 +178,21 @@ function AdminCTAPage() {
   }
 
   const saveCTA = async () => {
+    const invalidBanner = banners.some(
+      (banner) =>
+        (!banner.url && !banner.file) ||
+        !banner.heading.trim() ||
+        Boolean(banner.ctaLabel.trim()) !== Boolean(banner.ctaHref.trim()),
+    )
+
+    if (invalidBanner) {
+      setError('Every CTA banner needs media and a heading. Button text and link must be provided together.')
+      return
+    }
+
     try {
       setLoading(true)
+      setError('')
 
       const updated = []
 
@@ -208,19 +234,13 @@ function AdminCTAPage() {
         })
       }
 
-      await setDoc(
-        doc(
-          db,
-          'cms',
-          'ctaBanners',
-        ),
-        {
-          rotationEnabled,
+      await saveCmsDoc('ctaBanners', {
+        rotationEnabled,
 
-          banners: updated,
-        },
-      )
+        banners: updated,
+      })
 
+      setDirty(false)
       alert(
         'CTA Banners saved successfully.',
       )
@@ -242,6 +262,7 @@ function AdminCTAPage() {
         <h1 className="mt-3 text-5xl">
           CTA Banner Management
         </h1>
+        {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-12 rounded-[28px] border border-black/8 bg-white p-8">
 
@@ -252,9 +273,10 @@ function AdminCTAPage() {
                 rotationEnabled
               }
               onChange={(e) =>
-                setRotationEnabled(
-                  e.target.checked,
-                )
+                {
+                  setRotationEnabled(e.target.checked)
+                  setDirty(true)
+                }
               }
             />
 
@@ -586,12 +608,12 @@ function AdminCTAPage() {
 
             <button
               onClick={saveCTA}
-              disabled={loading}
+              disabled={loading || !dirty}
               className="btn-primary"
             >
               {loading
                 ? 'Saving...'
-                : 'Save CTA Banners'}
+                : dirty ? 'Save CTA Banners' : 'Saved'}
             </button>
 
           </div>

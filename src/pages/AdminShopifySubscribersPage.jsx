@@ -6,11 +6,14 @@ function AdminShopifySubscribersPage() {
   const [subscribers, setSubscribers] = useState([])
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isActive = true
 
     async function loadSubscribers() {
+      setLoading(true)
+      setError('')
       try {
         const payload = await getShopifySubscribers({ search, filter: 'subscribed' })
 
@@ -21,6 +24,8 @@ function AdminShopifySubscribersPage() {
         if (isActive) {
           setError(loadError.message)
         }
+      } finally {
+        if (isActive) setLoading(false)
       }
     }
 
@@ -46,6 +51,7 @@ function AdminShopifySubscribersPage() {
         </div>
 
         {error ? <p className="mt-6 text-sm text-red-600">{error}</p> : null}
+        {loading ? <p className="mt-6 text-sm text-muted">Loading Shopify subscribers...</p> : null}
 
         <div className="mt-8 overflow-x-auto rounded-[8px] border border-black/8 bg-white">
           <table className="min-w-[680px] w-full text-left text-sm">
@@ -68,6 +74,7 @@ function AdminShopifySubscribersPage() {
               ))}
             </tbody>
           </table>
+          {!loading && !error && !subscribers.length ? <p className="p-6 text-sm text-muted">No subscribers match the current search.</p> : null}
         </div>
       </div>
     </div>

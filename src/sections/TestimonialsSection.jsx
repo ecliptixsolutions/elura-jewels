@@ -2,9 +2,15 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import Reveal from '../components/Reveal.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
+import {
+  getJudgeMeShopDomain,
+  isJudgeMeEnabled,
+  loadJudgeMeScript,
+} from '../lib/reviews.js'
 
-function TestimonialsSection({ testimonials }) {
+function TestimonialsSection() {
   const sliderRef = useRef(null)
+  const hasJudgeMe = isJudgeMeEnabled()
 
   const scrollCards = (direction) => {
     const slider = sliderRef.current
@@ -39,12 +45,20 @@ function TestimonialsSection({ testimonials }) {
   })
 
   useEffect(() => {
+    if (!hasJudgeMe) return undefined
+
+    loadJudgeMeScript()
+
     const intervalId = window.setInterval(() => {
       advanceSlider()
     }, 5200)
 
     return () => window.clearInterval(intervalId)
-  }, [])
+  }, [hasJudgeMe])
+
+  if (!hasJudgeMe) {
+    return null
+  }
 
   return (
     <section className="section-spacing bg-white">
@@ -80,23 +94,13 @@ function TestimonialsSection({ testimonials }) {
           ref={sliderRef}
           className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2 scroll-smooth"
         >
-          {testimonials.map((testimonial, index) => (
-            <Reveal
-              key={testimonial.id}
-              delay={index * 90}
-              className="min-w-[85%] flex-[0_0_85%] snap-start sm:min-w-[24rem] sm:flex-[0_0_24rem] lg:min-w-[26rem] lg:flex-[0_0_26rem]"
-            >
-              <article className="review-card rounded-[16px] bg-white p-6 shadow-[0_14px_36px_rgba(27,24,19,0.06)] transition duration-300 hover:-translate-y-1">
-                <p className="text-lg leading-8 text-ink">{testimonial.quote}</p>
-                <div className="mt-8">
-                  <h3 className="text-xl">{testimonial.name}</h3>
-                  <p className="mt-2 text-xs uppercase tracking-[0.28em] text-muted">
-                    {testimonial.title}
-                  </p>
-                </div>
-              </article>
-            </Reveal>
-          ))}
+          <Reveal className="min-w-full flex-[0_0_100%] snap-start">
+            <div
+              className="jdgm-carousel-wrapper rounded-[8px] bg-white p-1"
+              data-widget-name="review_carousel"
+              data-shop-domain={getJudgeMeShopDomain()}
+            />
+          </Reveal>
         </div>
       </div>
     </section>

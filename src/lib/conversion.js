@@ -17,7 +17,20 @@ const writeJson = (key, value) => {
   }
 }
 
-const getRecentlyViewedIds = () => readJson(recentlyViewedKey, [])
+const getRecentlyViewedIds = () => {
+  const seen = new Set()
+
+  return readJson(recentlyViewedKey, []).filter((id) => {
+    const key = String(id)
+
+    if (seen.has(key)) {
+      return false
+    }
+
+    seen.add(key)
+    return true
+  })
+}
 
 const saveRecentlyViewedProduct = (productId) => {
   if (!productId) {
@@ -26,7 +39,7 @@ const saveRecentlyViewedProduct = (productId) => {
 
   const next = [
     productId,
-    ...getRecentlyViewedIds().filter((id) => id !== productId),
+    ...getRecentlyViewedIds().filter((id) => String(id) !== String(productId)),
   ].slice(0, 8)
 
   writeJson(recentlyViewedKey, next)

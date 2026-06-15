@@ -10,6 +10,11 @@ import { createBackInStockCustomer } from '../lib/api.js'
 import { subscribeCmsDoc } from '../lib/cms.js'
 import { estimateDelivery } from '../lib/conversion.js'
 import { mapShopifyProduct } from '../lib/productMapping.js'
+import {
+  getJudgeMeShopDomain,
+  getReviewsProvider,
+  loadJudgeMeScript,
+} from '../lib/reviews.js'
 import { getShopifyProductRecommendations } from '../lib/shopify.js'
 import { trackConversionEvent } from '../lib/analytics.js'
 import {
@@ -503,9 +508,9 @@ function ProductPageDetail({
     xl:overflow-visible
   "
 >
-  {displayRecommendations.map((relatedProduct) => (
+  {displayRecommendations.map((relatedProduct, index) => (
     <div
-      key={relatedProduct.id}
+      key={`${relatedProduct.id}-${relatedProduct.slug || index}`}
       className="
         w-[55%]
         sm:w-[220px]
@@ -588,8 +593,8 @@ function TrustBadges() {
 function ProductScroller({ products }) {
   return (
     <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 no-scrollbar md:grid md:grid-cols-4 md:overflow-visible">
-      {products.map((product) => (
-        <div key={product.id} className="w-[64%] flex-none snap-start sm:w-[260px] md:w-auto">
+      {products.map((product, index) => (
+        <div key={`${product.id}-${product.slug || index}`} className="w-[64%] flex-none snap-start sm:w-[260px] md:w-auto">
           <ProductCard product={product} />
         </div>
       ))}
@@ -598,8 +603,14 @@ function ProductScroller({ products }) {
 }
 
 function ReviewsIntegrationSlot({ product }) {
-  const provider = (import.meta.env.VITE_REVIEWS_PROVIDER || '').trim().toLowerCase()
+  const provider = getReviewsProvider()
   const shopifyProductId = product.shopifyProductId || product.id
+
+  useEffect(() => {
+    if (provider === 'judgeme' || provider === 'judge.me') {
+      loadJudgeMeScript()
+    }
+  }, [provider])
 
   if (provider === 'judgeme' || provider === 'judge.me') {
     return (
@@ -607,6 +618,7 @@ function ReviewsIntegrationSlot({ product }) {
         <div
           className="jdgm-widget jdgm-review-widget"
           data-id={shopifyProductId}
+          data-shop-domain={getJudgeMeShopDomain()}
           data-product-title={product.name}
           data-product-url={`/product/${product.slug}`}
         />

@@ -1,4 +1,4 @@
-import { BarChart3, Home, Image, LayoutDashboard, LogOut, Mail, Share2, Settings, Tags, Users } from 'lucide-react'
+import { BarChart3, BookOpen, Home, Image, LayoutDashboard, LogOut, Mail, Megaphone, Newspaper, Share2, Tags, Users } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 import { useStore } from '../context/StoreContext.jsx'
@@ -8,12 +8,14 @@ const adminLinks = [
   { label: 'Homepage CMS', href: '/admin/settings', icon: Home },
   { label: 'Hero Banners', href: '/admin/banners', icon: Image },
   { label: 'Collections CMS', href: '/admin/collections', icon: Tags },
+  { label: 'About CMS', href: '/admin/about', icon: BookOpen },
+  { label: 'CTA Banners', href: '/admin/cta', icon: Megaphone },
   { label: 'Coupons', href: '/admin/coupons', icon: Tags },
   { label: 'Marketing', href: '/admin/marketing', icon: Mail },
   { label: 'Customers', href: '/admin/marketing/customers', icon: Users },
   { label: 'Subscribers', href: '/admin/marketing/subscribers', icon: BarChart3 },
+  { label: 'Newsletter Popup', href: '/admin/marketing/newsletter', icon: Newspaper },
   { label: 'Social Media', href: '/admin/social-media', icon: Share2 },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 function AdminLayout() {
@@ -37,7 +39,7 @@ function AdminLayout() {
               <NavLink
                 key={item.href}
                 to={item.href}
-                end={item.href === '/admin'}
+                end
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-[8px] px-4 py-3 text-sm font-semibold transition ${
                     isActive ? 'bg-ink text-ivory' : 'text-muted hover:bg-linen/70 hover:text-ink'
@@ -72,7 +74,7 @@ function AdminLayout() {
             <NavLink
               key={item.href}
               to={item.href}
-              end={item.href === '/admin'}
+              end
               className={({ isActive }) =>
                 `whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold ${
                   isActive ? 'bg-ink text-ivory' : 'bg-linen/70 text-muted'

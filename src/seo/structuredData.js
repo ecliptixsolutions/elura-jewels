@@ -133,24 +133,6 @@ export const faqSchema = (items = []) => ({
   })),
 })
 
-const aggregateRatingForProduct = (product) => {
-  if (!product.reviews?.length) {
-    return undefined
-  }
-
-  const ratingValue =
-    product.reviews.reduce((total, review) => total + Number(review.rating || 0), 0) /
-    product.reviews.length
-
-  return {
-    '@type': 'AggregateRating',
-    ratingValue: Number(ratingValue.toFixed(1)),
-    reviewCount: product.reviews.length,
-    bestRating: 5,
-    worstRating: 1,
-  }
-}
-
 export const productSchema = (product) => {
   const url = canonicalForPath(`/product/${product.slug}`)
   const sku =
@@ -187,22 +169,6 @@ export const productSchema = (product) => {
       },
       areaServed: 'GB',
     },
-    aggregateRating: aggregateRatingForProduct(product),
-    review: product.reviews?.map((review) => ({
-      '@type': 'Review',
-      author: {
-        '@type': 'Person',
-        name: review.name,
-      },
-      datePublished: review.date,
-      reviewBody: review.content,
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: review.rating,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    })),
   }
 }
 

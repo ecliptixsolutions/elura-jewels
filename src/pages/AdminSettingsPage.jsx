@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
+import LocationDigitalTwinEditor from '../components/LocationDigitalTwinEditor.jsx'
+import { defaultLocationDigitalTwin } from '../data/locationDigitalTwin.js'
+import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
+import { saveCmsDocsBatch, subscribeCmsDoc } from '../lib/cms.js'
 
 const announcementFallback = {
   enabled: false,
@@ -41,7 +44,12 @@ function AdminSettingsPage() {
   const [cartDrawer, setCartDrawer] = useState(cartDrawerFallback)
   const [conversion, setConversion] = useState(conversionFallback)
   const [careGuide, setCareGuide] = useState(careGuideFallback)
+  const [locationTwin, setLocationTwin] = useState(defaultLocationDigitalTwin)
   const [loading, setLoading] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [error, setError] = useState('')
+
+  useUnsavedChanges(dirty)
 
   useEffect(() => {
     const unsubscribeAnnouncement = subscribeCmsDoc(
@@ -64,25 +72,44 @@ function AdminSettingsPage() {
       careGuideFallback,
       setCareGuide,
     )
+    const unsubscribeLocationTwin = subscribeCmsDoc(
+      'locationTwin',
+      defaultLocationDigitalTwin,
+      setLocationTwin,
+    )
 
     return () => {
       unsubscribeAnnouncement()
       unsubscribeCart()
       unsubscribeConversion()
       unsubscribeCareGuide()
+      unsubscribeLocationTwin()
     }
   }, [])
 
   const saveSettings = async () => {
+    if (announcement.enabled && !announcement.message.trim()) {
+      setError('Announcement message is required when the announcement bar is enabled.')
+      return
+    }
+
+    if (!careGuide.title.trim() || !(careGuide.steps || []).length) {
+      setError('The care guide needs a title and at least one care step.')
+      return
+    }
+
     setLoading(true)
+    setError('')
 
     try {
-      await Promise.all([
-        saveCmsDoc('announcement', announcement),
-        saveCmsDoc('cartDrawer', cartDrawer),
-        saveCmsDoc('conversion', conversion),
-        saveCmsDoc('careGuide', careGuide),
+      await saveCmsDocsBatch([
+        ['announcement', announcement],
+        ['cartDrawer', cartDrawer],
+        ['conversion', conversion],
+        ['careGuide', careGuide],
+        ['locationTwin', locationTwin],
       ])
+      setDirty(false)
       window.alert('Homepage settings saved successfully.')
     } catch (error) {
       window.alert(error.message || 'Failed to save settings.')
@@ -97,7 +124,9 @@ function AdminSettingsPage() {
         <p className="section-eyebrow">Homepage CMS</p>
         <h1 className="mt-3 text-5xl">Announcement and Conversion Settings</h1>
 
-        <div className="mt-12 grid gap-8 xl:grid-cols-2">
+        {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
+
+        <div className="mt-12 grid gap-8 xl:grid-cols-2" onChange={() => setDirty(true)}>
           <section className="rounded-[8px] border border-black/8 bg-white p-8">
             <h2 className="text-3xl">Announcement Bar</h2>
             <label className="mt-6 flex items-center gap-3">
@@ -168,6 +197,20 @@ function AdminSettingsPage() {
                 placeholder="One care step per line"
               />
             </div>
+          </section>
+
+          <section className="rounded-[8px] border border-black/8 bg-white/70 p-8 xl:col-span-2">
+            <div className="mb-8">
+              <p className="section-eyebrow">Digital Twin CMS</p>
+              <h2 className="mt-3 text-3xl">Location Page Digital Twin</h2>
+              <p className="mt-3 max-w-3xl text-sm text-muted">
+                Every visible location-page section, image, card, chip, map block, CTA, header, and footer item is controlled here.
+              </p>
+            </div>
+            <LocationDigitalTwinEditor
+              value={locationTwin}
+              onChange={setLocationTwin}
+            />
           </section>
         </div>
 

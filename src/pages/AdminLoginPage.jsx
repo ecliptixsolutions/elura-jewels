@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 
-import { auth } from '../lib/firebase'
+import { auth, hasFirebaseConfig } from '../lib/firebase'
 import { ADMIN_EMAILS } from '../config/adminEmails'
 import SEO from '../components/SEO.jsx'
 
@@ -31,9 +31,16 @@ function AdminLoginPage() {
 
     try {
       setLoading(true)
+      const normalizedEmail = email.trim().toLowerCase()
+
+      if (!auth || !hasFirebaseConfig) {
+        setError('Firebase authentication is not configured.')
+        setLoading(false)
+        return
+      }
 
       // ONLY ALLOWED ADMIN EMAILS
-      if (!ADMIN_EMAILS.includes(email)) {
+      if (!ADMIN_EMAILS.includes(normalizedEmail)) {
         setError('Unauthorized admin account')
         setLoading(false)
         return
@@ -41,7 +48,7 @@ function AdminLoginPage() {
 
       const response = await signInWithEmailAndPassword(
         auth,
-        email,
+        normalizedEmail,
         password,
       )
 
@@ -73,7 +80,12 @@ function AdminLoginPage() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, email)
+      if (!auth || !hasFirebaseConfig) {
+        setError('Firebase authentication is not configured.')
+        return
+      }
+
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase())
 
       setResetMessage(
         'Password reset email sent successfully. Please check your inbox.',
@@ -114,6 +126,8 @@ function AdminLoginPage() {
           <input
             type="email"
             placeholder="Admin Email"
+            aria-label="Admin Email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="search-shell w-full"
@@ -124,6 +138,8 @@ function AdminLoginPage() {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
+              aria-label="Password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="search-shell w-full pr-12"
@@ -132,6 +148,7 @@ function AdminLoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-muted transition hover:text-gold"
             >
               {showPassword ? (

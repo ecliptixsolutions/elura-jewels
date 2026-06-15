@@ -5,6 +5,7 @@ import { getShopifyDiscounts } from '../lib/api.js'
 function AdminCouponsPage() {
   const [discounts, setDiscounts] = useState([])
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isActive = true
@@ -20,6 +21,8 @@ function AdminCouponsPage() {
         if (isActive) {
           setError(loadError.message)
         }
+      } finally {
+        if (isActive) setLoading(false)
       }
     }
 
@@ -49,6 +52,7 @@ function AdminCouponsPage() {
         </a>
 
         {error ? <p className="mt-6 text-sm text-red-600">{error}</p> : null}
+        {loading ? <p className="mt-6 text-sm text-muted">Loading Shopify discounts...</p> : null}
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {discounts.map((discount) => (
@@ -58,6 +62,7 @@ function AdminCouponsPage() {
               <p className="mt-3 text-sm text-muted">{discount.summary}</p>
             </article>
           ))}
+          {!loading && !error && !discounts.length ? <p className="text-sm text-muted">No active Shopify discounts found.</p> : null}
         </div>
       </div>
     </div>

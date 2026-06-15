@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
+import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
 import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
 
 const emptyBanner = {
@@ -26,6 +27,10 @@ function AdminBannersPage() {
   const [isRotational, setIsRotational] = useState(true)
   const [loading, setLoading] = useState(false)
   const [banners, setBanners] = useState([emptyBanner])
+  const [dirty, setDirty] = useState(false)
+  const [error, setError] = useState('')
+
+  useUnsavedChanges(dirty)
 
   useEffect(() => {
     const unsubscribe = subscribeCmsDoc(
@@ -50,6 +55,7 @@ function AdminBannersPage() {
   }, [])
 
   const updateBanner = (index, field, value) => {
+    setDirty(true)
     setBanners((current) =>
       current.map((banner, bannerIndex) =>
         bannerIndex === index ? { ...banner, [field]: value } : banner,
@@ -59,16 +65,29 @@ function AdminBannersPage() {
 
   const handleFileChange = (index, file) => {
     if (!file) return
+    const isVideo = banners[index].type === 'video'
+    const validType = isVideo ? file.type === 'video/mp4' : file.type.startsWith('image/')
+    const maximumSize = isVideo ? 25 * 1024 * 1024 : 8 * 1024 * 1024
 
+    if (!validType || file.size > maximumSize) {
+      setError(`Select a valid ${isVideo ? 'MP4 under 25 MB' : 'image under 8 MB'}.`)
+      return
+    }
+
+    setError('')
     updateBanner(index, 'file', file)
     updateBanner(index, 'preview', URL.createObjectURL(file))
   }
 
   const addBanner = () => {
+    setDirty(true)
     setBanners((current) => (current.length >= 5 ? current : [...current, { ...emptyBanner }]))
   }
 
   const removeBanner = (index) => {
+    if (!window.confirm(`Remove Hero Slide ${index + 1}?`)) return
+
+    setDirty(true)
     setBanners((current) => current.filter((_, bannerIndex) => bannerIndex !== index))
   }
 
@@ -87,7 +106,20 @@ function AdminBannersPage() {
   }
 
   const saveBanners = async () => {
+    const invalidBanner = banners.some(
+      (banner) =>
+        (!banner.url && !banner.file) ||
+        !banner.heading.trim() ||
+        Boolean(banner.buttonText.trim()) !== Boolean(banner.buttonLink.trim()),
+    )
+
+    if (invalidBanner) {
+      setError('Every slide needs media and a headline. Button text and button link must be provided together.')
+      return
+    }
+
     setLoading(true)
+    setError('')
 
     try {
       const uploadedBanners = []
@@ -122,6 +154,7 @@ function AdminBannersPage() {
         banners: uploadedBanners,
       })
 
+      setDirty(false)
       window.alert('Hero banners saved successfully.')
     } catch (error) {
       window.alert(error.message || 'Failed to save hero banners.')
@@ -138,13 +171,17 @@ function AdminBannersPage() {
         <p className="mt-4 max-w-3xl text-muted">
           Manage homepage hero media, text, calls to action, overlay strength, and slide alignment.
         </p>
+        {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-12 rounded-[8px] border border-black/8 bg-white p-8">
           <label className="flex items-center gap-3">
             <input
               type="checkbox"
               checked={isRotational}
-              onChange={(event) => setIsRotational(event.target.checked)}
+              onChange={(event) => {
+                setIsRotational(event.target.checked)
+                setDirty(true)
+              }}
             />
             <span className="text-sm font-medium">Enable rotational hero banner</span>
           </label>
@@ -239,8 +276,8 @@ function AdminBannersPage() {
             </button>
           ) : null}
 
-          <button type="button" onClick={saveBanners} disabled={loading} className="btn-primary mt-8">
-            {loading ? 'Saving...' : 'Save Hero Banners'}
+          <button type="button" onClick={saveBanners} disabled={loading || !dirty} className="btn-primary mt-8">
+            {loading ? 'Saving...' : dirty ? 'Save Hero Banners' : 'Saved'}
           </button>
         </div>
       </div>

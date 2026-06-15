@@ -34,7 +34,15 @@ async function apiRequest(path, options = {}) {
     throw new Error(fallbackError)
   }
 
-  const payload = await response.json().catch(() => ({}))
+  const contentType = response.headers.get('content-type') || ''
+
+  if (!contentType.toLowerCase().includes('application/json')) {
+    throw new Error('The server returned an invalid response. Please check the API deployment.')
+  }
+
+  const payload = await response.json().catch(() => {
+    throw new Error('The server returned invalid JSON. Please try again.')
+  })
 
   if (!response.ok) {
     throw new Error(payload.error || fallbackError)

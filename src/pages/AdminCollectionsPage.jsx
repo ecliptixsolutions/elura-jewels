@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
 import { saveCmsDoc, subscribeCmsDoc } from '../lib/cms.js'
 import { getShopifyCollections } from '../lib/shopify.js'
 
@@ -18,6 +19,10 @@ function AdminCollectionsPage() {
   const [settings, setSettings] = useState(collectionsFallback)
   const [shopifyCollections, setShopifyCollections] = useState([])
   const [shopifyError, setShopifyError] = useState('')
+  const [dirty, setDirty] = useState(false)
+  const [error, setError] = useState('')
+
+  useUnsavedChanges(dirty)
 
   useEffect(() => {
     const unsubscribe = subscribeCmsDoc(
@@ -54,6 +59,7 @@ function AdminCollectionsPage() {
   }, [])
 
   const updateSetting = (field, value) => {
+    setDirty(true)
     setSettings((current) => ({
       ...current,
       [field]: value,
@@ -61,7 +67,15 @@ function AdminCollectionsPage() {
   }
 
   const saveCollections = async () => {
+    const maximumCollections = Number(settings.maximumCollections)
+
+    if (!settings.sectionTitle.trim() || maximumCollections < 1 || maximumCollections > 20) {
+      setError('Add a section title and choose between 1 and 20 collections.')
+      return
+    }
+
     setLoading(true)
+    setError('')
 
     try {
       await saveCmsDoc('collections', {
@@ -77,6 +91,7 @@ function AdminCollectionsPage() {
         })),
       })
 
+      setDirty(false)
       window.alert('Collections CMS settings saved successfully.')
     } catch (error) {
       window.alert(error.message || 'Failed to save collections settings.')
@@ -93,6 +108,7 @@ function AdminCollectionsPage() {
         <p className="mt-4 max-w-3xl text-muted">
           Collections are synced from Shopify. This page controls how the homepage collection section is presented.
         </p>
+        {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-12 grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[8px] border border-black/8 bg-white p-8">
@@ -144,8 +160,8 @@ function AdminCollectionsPage() {
               </div>
             </div>
 
-            <button type="button" onClick={saveCollections} disabled={loading} className="btn-primary mt-8">
-              {loading ? 'Saving...' : 'Save Collections CMS'}
+            <button type="button" onClick={saveCollections} disabled={loading || !dirty} className="btn-primary mt-8">
+              {loading ? 'Saving...' : dirty ? 'Save Collections CMS' : 'Saved'}
             </button>
           </div>
 
@@ -176,6 +192,9 @@ function AdminCollectionsPage() {
                   <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted">{collection.handle}</p>
                 </article>
               ))}
+              {!shopifyError && !shopifyCollections.length ? (
+                <p className="text-sm text-muted">No Shopify collections were returned.</p>
+              ) : null}
             </div>
           </div>
         </div>

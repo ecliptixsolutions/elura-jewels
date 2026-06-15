@@ -1,6 +1,24 @@
 {
   "headers": [
     {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         {
@@ -25,7 +43,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.shopify.com https://images.unsplash.com https://upload.wikimedia.org https://firebasestorage.googleapis.com https://*.googleusercontent.com; media-src 'self' blob: https://firebasestorage.googleapis.com https://cdn.shopify.com; connect-src 'self' http://localhost:5000 https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://elura-jewels-2.myshopify.com https://challenges.cloudflare.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://challenges.cloudflare.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://challenges.cloudflare.com https://cdn.judge.me https://*.judge.me; style-src 'self' 'unsafe-inline' https://cdn.judge.me https://*.judge.me; img-src 'self' data: blob: https://cdn.shopify.com https://images.unsplash.com https://upload.wikimedia.org https://firebasestorage.googleapis.com https://*.googleusercontent.com https://cdn.judge.me https://*.judge.me; media-src 'self' blob: https://firebasestorage.googleapis.com https://cdn.shopify.com; connect-src 'self' http://localhost:5000 https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://elura-jewels-2.myshopify.com https://challenges.cloudflare.com https://cdn.judge.me https://*.judge.me; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://challenges.cloudflare.com https://cdn.judge.me https://*.judge.me; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },

@@ -4,19 +4,23 @@ import { Navigate } from 'react-router-dom'
 
 import { onAuthStateChanged } from 'firebase/auth'
 
-import { auth } from '../lib/firebase'
+import { auth, hasFirebaseConfig } from '../lib/firebase'
 
 import { ADMIN_EMAILS } from '../config/adminEmails'
 import SEO from './SEO.jsx'
 
 function ProtectedAdminRoute({ children }) {
   const [loading, setLoading] =
-    useState(true)
+    useState(Boolean(auth && hasFirebaseConfig))
 
   const [user, setUser] =
     useState(null)
 
   useEffect(() => {
+    if (!auth || !hasFirebaseConfig) {
+      return undefined
+    }
+
     const unsubscribe =
       onAuthStateChanged(
         auth,

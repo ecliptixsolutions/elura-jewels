@@ -27,37 +27,58 @@ import {
   PageLoaderProvider,
 } from './context/PageLoaderContext.jsx'
 
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'))
-const AdminAboutPage = lazy(() => import('./pages/AdminAboutPage'))
-const AdminBannersPage = lazy(() => import('./pages/AdminBannersPage'))
-const AdminCollectionsPage = lazy(() => import('./pages/AdminCollectionsPage'))
-const AdminCTAPage = lazy(() => import('./pages/AdminCTAPage'))
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
-const AdminCouponsPage = lazy(() => import('./pages/AdminCouponsPage.jsx'))
-const AdminMarketingPage = lazy(() => import('./pages/AdminMarketingPage.jsx'))
-const AdminNewsletterPage = lazy(() => import('./pages/AdminNewsletterPage.jsx'))
-const AdminSettingsPage = lazy(() => import('./pages/AdminSettingsPage.jsx'))
-const AdminShopifyCustomersPage = lazy(() => import('./pages/AdminShopifyCustomersPage.jsx'))
-const AdminShopifySubscribersPage = lazy(() => import('./pages/AdminShopifySubscribersPage.jsx'))
-const AdminSocialMediaPage = lazy(() => import('./pages/AdminSocialMediaPage.jsx'))
-const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'))
-const CollectionsPage = lazy(() => import('./pages/CollectionsPage.jsx'))
-const CollectionPage = lazy(() => import('./pages/CollectionPage.jsx'))
-const ContactPage = lazy(() => import('./pages/ContactPage.jsx'))
-const FaqPage = lazy(() => import('./pages/FaqPage.jsx'))
-const HomePage = lazy(() => import('./pages/HomePage.jsx'))
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
-const OrderDetailsPage = lazy(() => import('./pages/OrderDetailsPage.jsx'))
-const PrivacyPolicy = lazy(() => import('./pages/privacy-policy.jsx'))
-const ProductPage = lazy(() => import('./pages/ProductPage.jsx'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
-const RefundPolicy = lazy(() => import('./pages/refund-policy.jsx'))
-const ShippingReturns = lazy(() => import('./pages/shipping&returns.jsx'))
-const ShopPage = lazy(() => import('./pages/ShopPage.jsx'))
-const Terms = lazy(() => import('./pages/terms.jsx'))
-const WishlistPage = lazy(() => import('./pages/WishlistPage.jsx'))
+const chunkRetryKey = 'elura-chunk-reload-attempted'
+const chunkLoadPattern = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i
+
+const lazyRoute = (importPage) =>
+  lazy(() =>
+    importPage().catch((error) => {
+      const canRetry =
+        typeof window !== 'undefined' &&
+        chunkLoadPattern.test(error?.message || '') &&
+        window.sessionStorage.getItem(chunkRetryKey) !== '1'
+
+      if (canRetry) {
+        window.sessionStorage.setItem(chunkRetryKey, '1')
+        window.location.reload()
+        return new Promise(() => {})
+      }
+
+      throw error
+    }),
+  )
+
+const AboutPage = lazyRoute(() => import('./pages/AboutPage.jsx'))
+const AdminAboutPage = lazyRoute(() => import('./pages/AdminAboutPage.jsx'))
+const AdminBannersPage = lazyRoute(() => import('./pages/AdminBannersPage.jsx'))
+const AdminCollectionsPage = lazyRoute(() => import('./pages/AdminCollectionsPage.jsx'))
+const AdminCTAPage = lazyRoute(() => import('./pages/AdminCTAPage.jsx'))
+const AdminDashboard = lazyRoute(() => import('./pages/AdminDashboard.jsx'))
+const AdminCouponsPage = lazyRoute(() => import('./pages/AdminCouponsPage.jsx'))
+const AdminMarketingPage = lazyRoute(() => import('./pages/AdminMarketingPage.jsx'))
+const AdminNewsletterPage = lazyRoute(() => import('./pages/AdminNewsletterPage.jsx'))
+const AdminSettingsPage = lazyRoute(() => import('./pages/AdminSettingsPage.jsx'))
+const AdminShopifyCustomersPage = lazyRoute(() => import('./pages/AdminShopifyCustomersPage.jsx'))
+const AdminShopifySubscribersPage = lazyRoute(() => import('./pages/AdminShopifySubscribersPage.jsx'))
+const AdminSocialMediaPage = lazyRoute(() => import('./pages/AdminSocialMediaPage.jsx'))
+const AdminLoginPage = lazyRoute(() => import('./pages/AdminLoginPage.jsx'))
+const AuthPage = lazyRoute(() => import('./pages/AuthPage.jsx'))
+const CheckoutPage = lazyRoute(() => import('./pages/CheckoutPage.jsx'))
+const CollectionsPage = lazyRoute(() => import('./pages/CollectionsPage.jsx'))
+const CollectionPage = lazyRoute(() => import('./pages/CollectionPage.jsx'))
+const ContactPage = lazyRoute(() => import('./pages/ContactPage.jsx'))
+const FaqPage = lazyRoute(() => import('./pages/FaqPage.jsx'))
+const HomePage = lazyRoute(() => import('./pages/HomePage.jsx'))
+const NotFoundPage = lazyRoute(() => import('./pages/NotFoundPage.jsx'))
+const OrderDetailsPage = lazyRoute(() => import('./pages/OrderDetailsPage.jsx'))
+const PrivacyPolicy = lazyRoute(() => import('./pages/privacy-policy.jsx'))
+const ProductPage = lazyRoute(() => import('./pages/ProductPage.jsx'))
+const ProfilePage = lazyRoute(() => import('./pages/ProfilePage.jsx'))
+const RefundPolicy = lazyRoute(() => import('./pages/refund-policy.jsx'))
+const ShippingReturns = lazyRoute(() => import('./pages/shipping&returns.jsx'))
+const ShopPage = lazyRoute(() => import('./pages/ShopPage.jsx'))
+const Terms = lazyRoute(() => import('./pages/terms.jsx'))
+const WishlistPage = lazyRoute(() => import('./pages/WishlistPage.jsx'))
 
 function AppRoutes() {
   const location = useLocation()

@@ -6,6 +6,7 @@ import { getMarketingOverview } from '../lib/api.js'
 function AdminMarketingPage() {
   const [overview, setOverview] = useState(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isActive = true
@@ -21,6 +22,8 @@ function AdminMarketingPage() {
         if (isActive) {
           setError(loadError.message)
         }
+      } finally {
+        if (isActive) setLoading(false)
       }
     }
 
@@ -48,6 +51,7 @@ function AdminMarketingPage() {
         </p>
 
         {error ? <p className="mt-6 rounded-[8px] bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
+        {loading ? <p className="mt-6 text-sm text-muted">Loading Shopify marketing data...</p> : null}
 
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {[
@@ -79,6 +83,7 @@ function AdminMarketingPage() {
                   <p className="text-sm text-muted">{customer.marketingConsentStatus}</p>
                 </div>
               ))}
+              {!loading && !error && !overview?.recentSubscribers?.length ? <p className="text-sm text-muted">No recent subscribers found.</p> : null}
             </div>
           </section>
 
@@ -91,6 +96,7 @@ function AdminMarketingPage() {
                   <p className="text-sm text-muted">{customer.email}</p>
                 </div>
               ))}
+              {!loading && !error && !overview?.latestCustomerSignups?.length ? <p className="text-sm text-muted">No recent customer signups found.</p> : null}
             </div>
           </section>
         </div>

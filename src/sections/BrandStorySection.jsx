@@ -57,7 +57,7 @@ function BrandStorySection({ story }) {
           <Reveal delay={120}>
 
             <SectionHeading
-              eyebrow="About ELURA"
+              eyebrow={story.eyebrow || 'About ELURA'}
               title={story.title}
               description={story.body[0]}
             />
@@ -81,12 +81,11 @@ function BrandStorySection({ story }) {
 
             </div>
 
-            <Link
-              to="/about"
-              className="line-link mt-8"
-            >
-              Learn More
-            </Link>
+            {story.buttonText && story.buttonLink ? (
+              <Link to={story.buttonLink} className="line-link mt-8">
+                {story.buttonText}
+              </Link>
+            ) : null}
 
           </Reveal>
 

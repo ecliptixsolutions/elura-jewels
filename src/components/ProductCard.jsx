@@ -11,8 +11,8 @@ function ProductCard({ product }) {
   const isWishlisted = wishlistIds.includes(product.id)
 
   return (
-    <article className="group">
-      <Link to={`/product/${product.slug}`} className="block">
+    <article className="group flex h-full min-w-0 flex-col">
+      <Link to={`/product/${product.slug}`} className="flex h-full min-w-0 flex-col">
         <div className="relative overflow-hidden rounded-[16px] bg-linen/70">
           <img
             src={product.images[0]}
@@ -25,8 +25,6 @@ function ProductCard({ product }) {
               aspect-[4/5]
               w-full
               object-cover
-              max-h-[240px]
-              sm:max-h-none
               transition-[transform,opacity]
               duration-300
               md:duration-700
@@ -86,12 +84,12 @@ function ProductCard({ product }) {
           </button>
         </div>
 
-        <div className="flex items-start justify-between gap-4 px-1 py-4">
-          <h3 className="product-name-animated max-w-[15rem] text-base font-medium leading-snug text-ink">
+        <div className="flex flex-1 items-start justify-between gap-4 px-1 py-4">
+          <h3 className="product-name-animated max-w-[15rem] flex-1 text-base font-medium leading-snug text-ink">
             {product.name}
           </h3>
 
-          <p className="pt-0.5 text-sm font-semibold text-ink">
+          <p className="shrink-0 pt-0.5 text-sm font-semibold text-ink">
             {formatCurrency(product.price)}
           </p>
         </div>

@@ -169,7 +169,7 @@ function HeroSection({ slides = [] }) {
         {isRotational &&
           slides.length >
             1 && (
-            <div className="section-shell absolute inset-x-0 bottom-4 z-20 flex items-center justify-center md:bottom-6 md:justify-between">
+            <div className="section-shell absolute inset-x-0 bottom-5 z-20 flex items-center justify-center md:bottom-6 md:justify-between">
 
               {/* DOTS */}
               <div className="flex items-center gap-2 max-md:mt-4">
@@ -247,11 +247,11 @@ function HeroSection({ slides = [] }) {
       </div>
 
       <div
-        className={`section-shell pointer-events-none absolute inset-x-0 top-0 z-10 flex h-full max-md:pb-20 md:max-[1199px]:pb-24 ${
+        className={`section-shell pointer-events-none absolute inset-x-0 top-0 z-10 flex h-full min-h-0 max-md:pb-24 md:max-[1199px]:pb-24 ${
           alignmentClasses[activeSlide?.textAlignment] || alignmentClasses.left
         }`}
       >
-        <div className="max-w-2xl pt-8 text-white max-md:flex max-md:max-w-[min(100%,22rem)] max-md:flex-col max-md:items-start max-md:justify-center md:max-[1199px]:max-w-xl md:max-[1199px]:pb-24">
+        <div className="max-h-full max-w-2xl overflow-hidden pt-8 text-white max-md:flex max-md:max-w-[min(100%,22rem)] max-md:flex-col max-md:items-start max-md:justify-center md:max-[1199px]:max-w-xl md:max-[1199px]:pb-24">
           {activeSlide?.label ? (
             <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:tracking-[0.42em]">
               {activeSlide.label}
@@ -259,7 +259,7 @@ function HeroSection({ slides = [] }) {
           ) : null}
 
           {activeSlide?.heading ? (
-            <h1 className="mt-3 max-w-3xl text-[clamp(1.9rem,8vw,2.55rem)] leading-[1.08] text-white sm:mt-5 sm:text-[clamp(2.35rem,6vw,3.5rem)] md:max-[1199px]:text-[clamp(3rem,5.2vw,3.75rem)] min-[1200px]:text-7xl">
+            <h1 className="mt-3 max-w-3xl break-words text-[clamp(1.9rem,8vw,2.55rem)] leading-[1.08] text-white sm:mt-5 sm:text-[clamp(2.35rem,6vw,3.5rem)] md:max-[1199px]:text-[clamp(3rem,5.2vw,3.75rem)] min-[1200px]:text-7xl">
               {activeSlide.heading}
             </h1>
           ) : null}
@@ -273,7 +273,7 @@ function HeroSection({ slides = [] }) {
           {activeSlide?.ctaHref && activeSlide?.ctaLabel ? (
             <Link
               to={activeSlide.ctaHref}
-              className="btn-primary pointer-events-auto mt-5 mb-9 bg-white text-ink hover:text-ink sm:mt-6 md:mb-10 min-[1200px]:mt-8 min-[1200px]:mb-0"
+              className="btn-primary pointer-events-auto mt-5 mb-10 whitespace-nowrap bg-white text-ink hover:text-ink sm:mt-6 md:mb-10 min-[1200px]:mt-8 min-[1200px]:mb-0"
             >
               {activeSlide.ctaLabel}
             </Link>

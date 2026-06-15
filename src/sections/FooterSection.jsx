@@ -132,7 +132,7 @@ function FooterSection() {
   href="https://wa.me/447440482483"
   target="_blank"
   rel="noopener noreferrer"
-  className="group flex items-center gap-3 whitespace-nowrap transition hover:text-gold"
+  className="group flex items-center gap-3 transition hover:text-gold"
 >
   <img
     src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
@@ -144,15 +144,15 @@ function FooterSection() {
     className="h-5 w-5"
   />
 
-  <span className="relative">
+  <span className="relative break-words">
   +44 7440482483
 
   <span className="absolute bottom-[-2px] left-0 h-[1px] w-0 bg-gold transition-all duration-300 group-hover:w-full" />
 </span>
 </a>
-    <div className="flex items-center gap-3 whitespace-nowrap">
+    <div className="flex items-start gap-3">
   <MapPin className="h-4 w-4 shrink-0 text-gold" />
-  <span className="whitespace-nowrap">
+  <span className="break-words">
     {contactDetails.location}
   </span>
 </div>

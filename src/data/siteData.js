@@ -474,6 +474,7 @@ export const homeFeaturedProducts = [
 
 export const brandStory = {
   image: categoryDisplay,
+  eyebrow: 'About ELURA',
   title: 'A considered jewellery house for modern wardrobes',
   body: [
     'ELURA creates clean, elevated pieces that feel timeless rather than trend-led. Each design is chosen to move comfortably between everyday dressing, event styling, and gifting moments.',
@@ -484,6 +485,8 @@ export const brandStory = {
     'Premium finishes and gift-ready presentation',
     'Focused edits across necklaces, rings, earrings, bangles, and bracelets',
   ],
+  buttonText: 'Learn More',
+  buttonLink: '/about',
 }
 
 export const testimonials = [

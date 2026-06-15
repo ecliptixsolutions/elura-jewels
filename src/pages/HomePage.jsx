@@ -3,18 +3,10 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import {
-  doc,
-  getDoc,
-} from 'firebase/firestore'
-
-import { db } from '../lib/firebase'
-
-import {
   collectionCards,
   brandStory,
   heroSlides,
   promoBanners,
-  testimonials,
 } from '../data/siteData.js'
 
 import SEO from '../components/SEO.jsx'
@@ -25,6 +17,7 @@ import HeroSection from '../sections/HeroSection.jsx'
 import ProductSection from '../sections/ProductSection.jsx'
 import TestimonialsSection from '../sections/TestimonialsSection.jsx'
 import { pageSeo } from '../seo/seoConfig.js'
+import { getCmsDocData } from '../lib/cms.js'
 import {
   breadcrumbSchema,
   jewelryStoreSchema,
@@ -67,14 +60,9 @@ function HomePage() {
       HERO BANNERS
       =========================================
       */
-      const heroSnapshot = await getDoc(
-        doc(db, 'cms', 'heroBanners'),
-      )
+      const heroCms = await getCmsDocData('hero', null)
 
-      if (heroSnapshot.exists()) {
-
-        const heroCms =
-          heroSnapshot.data()
+      if (heroCms) {
 
         if (
           heroCms?.banners?.length
@@ -157,21 +145,11 @@ function HomePage() {
       COLLECTIONS
       =========================================
       */
-      const collectionsSnapshot =
-        await getDoc(
-          doc(
-            db,
-            'cms',
-            'collections',
-          ),
-        )
+      const collectionsCms = await getCmsDocData('collections', null)
 
       if (
-        collectionsSnapshot.exists()
+        collectionsCms
       ) {
-
-        const collectionsCms =
-          collectionsSnapshot.data()
 
         if (
           collectionsCms?.items
@@ -226,39 +204,16 @@ function HomePage() {
       ABOUT SECTION
       =========================================
       */
-      const aboutSnapshot =
-        await getDoc(
-          doc(
-            db,
-            'cms',
-            'aboutSection',
-          ),
-        )
+      const aboutCms = await getCmsDocData('about', null)
 
       if (
-        aboutSnapshot.exists()
+        aboutCms
       ) {
 
-        const aboutCms =
-          aboutSnapshot.data()
-
         setAboutData({
-
-          image:
-            aboutCms.image ||
-            '',
-
-          title:
-            aboutCms.title ||
-            '',
-
-          body:
-            aboutCms.body ||
-            [],
-
-          features:
-            aboutCms.features ||
-            [],
+          ...brandStory,
+          ...aboutCms,
+          image: aboutCms.image || aboutCms.url || brandStory.image,
         })
       }
 
@@ -267,21 +222,11 @@ function HomePage() {
       CTA BANNERS
       =========================================
       */
-      const ctaSnapshot =
-        await getDoc(
-          doc(
-            db,
-            'cms',
-            'ctaBanners',
-          ),
-        )
+      const ctaCms = await getCmsDocData('ctaBanners', null)
 
       if (
-        ctaSnapshot.exists()
+        ctaCms
       ) {
-
-        const ctaCms =
-          ctaSnapshot.data()
 
         if (
           ctaCms?.banners
@@ -414,16 +359,10 @@ function HomePage() {
       />
 
       {/* ABOUT */}
-      <BrandStorySection
-        story={aboutData}
-      />
+      {aboutData.enabled !== false ? <BrandStorySection story={aboutData} /> : null}
 
       {/* TESTIMONIALS */}
-      <TestimonialsSection
-        testimonials={
-          testimonials
-        }
-      />
+      <TestimonialsSection />
 
       {/* CTA */}
       <FinalCtaSection

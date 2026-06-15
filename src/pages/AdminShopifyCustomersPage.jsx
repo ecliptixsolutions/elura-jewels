@@ -10,11 +10,14 @@ function AdminShopifyCustomersPage() {
   const [sortKey, setSortKey] = useState('created')
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isActive = true
 
     async function loadCustomers() {
+      setLoading(true)
+      setError('')
       try {
         const payload = await getShopifyCustomers({ search, filter })
 
@@ -25,6 +28,8 @@ function AdminShopifyCustomersPage() {
         if (isActive) {
           setError(loadError.message)
         }
+      } finally {
+        if (isActive) setLoading(false)
       }
     }
 
@@ -71,6 +76,7 @@ function AdminShopifyCustomersPage() {
         </div>
 
         {error ? <p className="mt-6 text-sm text-red-600">{error}</p> : null}
+        {loading ? <p className="mt-6 text-sm text-muted">Loading Shopify customers...</p> : null}
 
         <div className="mt-8 overflow-x-auto rounded-[8px] border border-black/8 bg-white">
           <table className="min-w-[920px] w-full text-left text-sm">
@@ -102,6 +108,7 @@ function AdminShopifyCustomersPage() {
               ))}
             </tbody>
           </table>
+          {!loading && !error && !sortedCustomers.length ? <p className="p-6 text-sm text-muted">No customers match the current search and filter.</p> : null}
         </div>
 
         {selectedCustomer ? (
