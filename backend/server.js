@@ -39,6 +39,30 @@ const allowedOrigins = [
     .filter(Boolean),
 ]
 
+const isAllowedOrigin = (origin) => {
+  if (!origin || allowedOrigins.includes(origin)) {
+    return true
+  }
+
+  try {
+    const url = new URL(origin)
+    return url.protocol === 'https:' && url.hostname.endsWith('.hostingersite.com')
+  } catch {
+    return false
+  }
+}
+
+const apiCors = cors({
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error('Origin not allowed by CORS'))
+  },
+})
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -47,23 +71,11 @@ const escapeHtml = (value = '') =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true)
-        return
-      }
-
-      callback(new Error('Origin not allowed by CORS'))
-    },
-  }),
-)
 app.use(express.json())
 
-app.all('/api/shopify', handleShopifyApi)
+app.all('/api/shopify', apiCors, handleShopifyApi)
 
-app.post('/send-email', async (req, res) => {
+app.post('/send-email', apiCors, async (req, res) => {
   try {
     applyRateLimit(req, {
       keyPrefix: 'contact',
