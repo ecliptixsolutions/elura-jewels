@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 
-import LocationDigitalTwinEditor from '../components/LocationDigitalTwinEditor.jsx'
-import { defaultLocationDigitalTwin } from '../data/locationDigitalTwin.js'
 import useUnsavedChanges from '../hooks/useUnsavedChanges.js'
 import { saveCmsDocsBatch, subscribeCmsDoc } from '../lib/cms.js'
 
@@ -29,22 +27,10 @@ const conversionFallback = {
   internationalDeliveryLabel: '5-10 working days',
 }
 
-const careGuideFallback = {
-  title: 'Jewellery Care Guide',
-  summary: 'Care guidance is managed from ELURA CMS.',
-  steps: [
-    'Store each piece separately in its pouch.',
-    'Avoid perfume, lotions, and water contact.',
-    'Polish gently with a soft jewellery cloth.',
-  ],
-}
-
 function AdminSettingsPage() {
   const [announcement, setAnnouncement] = useState(announcementFallback)
   const [cartDrawer, setCartDrawer] = useState(cartDrawerFallback)
   const [conversion, setConversion] = useState(conversionFallback)
-  const [careGuide, setCareGuide] = useState(careGuideFallback)
-  const [locationTwin, setLocationTwin] = useState(defaultLocationDigitalTwin)
   const [loading, setLoading] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState('')
@@ -67,34 +53,16 @@ function AdminSettingsPage() {
       conversionFallback,
       setConversion,
     )
-    const unsubscribeCareGuide = subscribeCmsDoc(
-      'careGuide',
-      careGuideFallback,
-      setCareGuide,
-    )
-    const unsubscribeLocationTwin = subscribeCmsDoc(
-      'locationTwin',
-      defaultLocationDigitalTwin,
-      setLocationTwin,
-    )
-
     return () => {
       unsubscribeAnnouncement()
       unsubscribeCart()
       unsubscribeConversion()
-      unsubscribeCareGuide()
-      unsubscribeLocationTwin()
     }
   }, [])
 
   const saveSettings = async () => {
     if (announcement.enabled && !announcement.message.trim()) {
       setError('Announcement message is required when the announcement bar is enabled.')
-      return
-    }
-
-    if (!careGuide.title.trim() || !(careGuide.steps || []).length) {
-      setError('The care guide needs a title and at least one care step.')
       return
     }
 
@@ -106,8 +74,6 @@ function AdminSettingsPage() {
         ['announcement', announcement],
         ['cartDrawer', cartDrawer],
         ['conversion', conversion],
-        ['careGuide', careGuide],
-        ['locationTwin', locationTwin],
       ])
       setDirty(false)
       window.alert('Homepage settings saved successfully.')
@@ -182,36 +148,6 @@ function AdminSettingsPage() {
             </div>
           </section>
 
-          <section className="rounded-[8px] border border-black/8 bg-white p-8 xl:col-span-2">
-            <h2 className="text-3xl">Jewellery Care Guide</h2>
-            <div className="mt-6 grid gap-5">
-              <input value={careGuide.title} onChange={(event) => setCareGuide((current) => ({ ...current, title: event.target.value }))} className="input-shell" placeholder="Care guide title" />
-              <textarea value={careGuide.summary} onChange={(event) => setCareGuide((current) => ({ ...current, summary: event.target.value }))} className="input-shell min-h-24 resize-y" placeholder="Care guide summary" />
-              <textarea
-                value={(careGuide.steps || []).join('\n')}
-                onChange={(event) => setCareGuide((current) => ({
-                  ...current,
-                  steps: event.target.value.split('\n').map((item) => item.trim()).filter(Boolean),
-                }))}
-                className="input-shell min-h-36 resize-y"
-                placeholder="One care step per line"
-              />
-            </div>
-          </section>
-
-          <section className="rounded-[8px] border border-black/8 bg-white/70 p-8 xl:col-span-2">
-            <div className="mb-8">
-              <p className="section-eyebrow">Digital Twin CMS</p>
-              <h2 className="mt-3 text-3xl">Location Page Digital Twin</h2>
-              <p className="mt-3 max-w-3xl text-sm text-muted">
-                Every visible location-page section, image, card, chip, map block, CTA, header, and footer item is controlled here.
-              </p>
-            </div>
-            <LocationDigitalTwinEditor
-              value={locationTwin}
-              onChange={setLocationTwin}
-            />
-          </section>
         </div>
 
         <button type="button" onClick={saveSettings} disabled={loading} className="btn-primary mt-8">
