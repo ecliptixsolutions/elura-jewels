@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SEO from '../components/SEO.jsx'
-import logoImage from '../assets/brand/elura-logo.svg'
 import { useStore } from '../context/StoreContext.jsx'
 import { pageSeo } from '../seo/seoConfig.js'
 
@@ -155,7 +154,13 @@ function AuthPage({ mode = 'login' }) {
         <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
           <div className="flex flex-col justify-between rounded-[18px] bg-white/45 p-8 sm:p-12">
             <div>
-              <img src={logoImage} alt="ELURA Jewels" className="h-32 w-auto object-contain" />
+              <img
+                src="/elura-logo-mark.webp"
+                alt="ELURA Jewels"
+                width="128"
+                height="128"
+                className="h-24 w-24 object-contain sm:h-28 sm:w-28"
+              />
               <p className="section-eyebrow mt-10">Account</p>
               <h1 className="mt-5 text-4xl sm:text-5xl">
                 {isLogin ? 'Welcome back to ELURA' : 'Create your ELURA account'}

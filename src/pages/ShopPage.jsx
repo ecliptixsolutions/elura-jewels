@@ -120,8 +120,10 @@ function ShopPage() {
                     key={filter}
                     type="button"
                     onClick={() => updateSearchParams(filter, searchQuery)}
-                    className={`filter-link ${
-                      activeCategory === filter ? 'filter-link-active' : ''
+                    className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition duration-300 lg:min-h-0 lg:border-0 lg:px-0 ${
+                      activeCategory === filter
+                        ? 'border-gold bg-white text-ink lg:bg-transparent lg:text-ink'
+                        : 'border-black/8 bg-white/55 text-muted hover:border-gold hover:text-gold lg:bg-transparent'
                     }`}
                   >
                     {filter}

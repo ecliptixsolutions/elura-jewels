@@ -1,5 +1,6 @@
 import { Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { createNewsletterCustomer } from '../lib/api.js'
 import { subscribeCmsDoc } from '../lib/cms.js'
@@ -15,6 +16,7 @@ const newsletterFallback = {
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 function NewsletterPopup() {
+  const location = useLocation()
   const [settings, setSettings] = useState(newsletterFallback)
   const [isVisible, setIsVisible] = useState(false)
   const [email, setEmail] = useState('')
@@ -25,7 +27,7 @@ function NewsletterPopup() {
   const [website, setWebsite] = useState('')
 
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY || document.querySelector('script[data-turnstile]')) {
+    if (!isVisible || !TURNSTILE_SITE_KEY || document.querySelector('script[data-turnstile]')) {
       return undefined
     }
 
@@ -37,7 +39,7 @@ function NewsletterPopup() {
     document.head.appendChild(script)
 
     return undefined
-  }, [])
+  }, [isVisible])
 
   useEffect(() => {
     window.eluraTurnstileCallback = (token) => {
@@ -60,36 +62,41 @@ function NewsletterPopup() {
   }, [])
 
   useEffect(() => {
-    if (!settings.enabled || window.localStorage.getItem('elura_popup_seen')) {
+    const blockedRoutes = ['/checkout', '/login', '/signup', '/profile', '/admin', '/admin-login']
+    const isBlockedRoute = blockedRoutes.some((path) => location.pathname.startsWith(path))
+
+    if (isBlockedRoute || !settings.enabled || window.localStorage.getItem('elura_popup_seen')) {
       return undefined
     }
 
+    let minimumDelayPassed = false
+    const isMobile = window.matchMedia('(max-width: 767px)').matches
+    const configuredDelay = Number(settings.delaySeconds || 10) * 1000
+    const minimumDelay = isMobile
+      ? Math.max(configuredDelay, 45000)
+      : Math.max(configuredDelay, 12000)
+
     const show = () => {
-      if (!window.localStorage.getItem('elura_popup_seen')) {
+      if (minimumDelayPassed && !window.localStorage.getItem('elura_popup_seen')) {
         setIsVisible(true)
       }
     }
 
-    const timerId = window.setTimeout(show, Number(settings.delaySeconds || 10) * 1000)
-    let inactivityTimerId
-    const resetInactivityTimer = () => {
-      if (!window.matchMedia('(max-width: 767px)').matches) {
-        return
-      }
+    const timerId = window.setTimeout(() => {
+      minimumDelayPassed = true
 
-      window.clearTimeout(inactivityTimerId)
-      inactivityTimerId = window.setTimeout(show, 20000)
-    }
+      if (!isMobile) {
+        show()
+      }
+    }, minimumDelay)
+
     const onScroll = () => {
       const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight
 
-      if (scrollableHeight > 0 && window.scrollY / scrollableHeight >= 0.5) {
+      if (scrollableHeight > 0 && window.scrollY / scrollableHeight >= (isMobile ? 0.72 : 0.58)) {
         show()
       }
-
-      resetInactivityTimer()
     }
-    const onTouchStart = () => resetInactivityTimer()
     const onMouseLeave = (event) => {
       if (event.clientY <= 0) {
         show()
@@ -97,18 +104,30 @@ function NewsletterPopup() {
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
     document.addEventListener('mouseleave', onMouseLeave)
-    resetInactivityTimer()
 
     return () => {
       window.clearTimeout(timerId)
-      window.clearTimeout(inactivityTimerId)
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('touchstart', onTouchStart)
       document.removeEventListener('mouseleave', onMouseLeave)
     }
-  }, [settings.delaySeconds, settings.enabled])
+  }, [location.pathname, settings.delaySeconds, settings.enabled])
+
+  useEffect(() => {
+    if (!isVisible) {
+      return undefined
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closePopup()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isVisible])
 
   const closePopup = () => {
     window.localStorage.setItem('elura_popup_seen', 'true')
@@ -145,8 +164,8 @@ function NewsletterPopup() {
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/35 px-5 backdrop-blur-[2px]">
-      <div className="relative w-full max-w-md rounded-[8px] bg-ivory p-7 shadow-[0_28px_90px_rgba(27,24,19,0.22)] sm:p-9">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 px-4 pb-4 backdrop-blur-[2px] sm:items-center sm:px-5 sm:pb-0">
+      <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[14px] bg-ivory p-6 shadow-[0_28px_90px_rgba(27,24,19,0.22)] sm:rounded-[8px] sm:p-9">
         <button
           type="button"
           onClick={closePopup}
@@ -157,7 +176,7 @@ function NewsletterPopup() {
         </button>
 
         <p className="section-eyebrow">ELURA</p>
-        <h2 className="mt-4 text-3xl sm:text-4xl">{settings.heading}</h2>
+        <h2 className="mt-4 text-3xl leading-tight sm:text-4xl">{settings.heading}</h2>
         <p className="mt-4 text-sm text-muted sm:text-base">{settings.description}</p>
         {settings.offer ? <p className="mt-3 text-sm font-semibold text-gold">{settings.offer}</p> : null}
 

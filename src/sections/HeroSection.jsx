@@ -182,18 +182,23 @@ function HeroSection({ slides = [] }) {
                     <button
                       key={index}
                       type="button"
+                      aria-label={`Show hero slide ${index + 1}`}
                       onClick={() =>
                         setActiveIndex(
                           index,
                         )
                       }
-                      className={`h-1.5 transition ${
-                        index ===
-                        activeIndex
-                          ? 'w-12 bg-gold'
-                          : 'w-7 bg-white/60'
-                      }`}
-                    />
+                      className="group inline-flex h-11 min-w-11 items-center justify-center focus:outline-none focus:ring-2 focus:ring-gold/40"
+                    >
+                      <span
+                        className={`block h-1.5 transition ${
+                          index ===
+                          activeIndex
+                            ? 'w-12 bg-gold'
+                            : 'w-7 bg-white/60'
+                        }`}
+                      />
+                    </button>
                   ),
                 )}
 
@@ -204,6 +209,7 @@ function HeroSection({ slides = [] }) {
 
                 <button
                   type="button"
+                  aria-label="Show previous hero slide"
                   onClick={() =>
                     setActiveIndex(
                       (
@@ -224,6 +230,7 @@ function HeroSection({ slides = [] }) {
 
                 <button
                   type="button"
+                  aria-label="Show next hero slide"
                   onClick={() =>
                     setActiveIndex(
                       (

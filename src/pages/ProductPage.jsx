@@ -247,7 +247,7 @@ function ProductPageDetail({
   }
 
   return (
-    <div className="section-spacing">
+    <div className="section-spacing max-lg:pb-28">
       <SEO
         title={productSeoTitle}
         description={productSeoDescription}

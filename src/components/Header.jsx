@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import logoImage from '../assets/brand/elura-logo.svg'
 import { navigationItems } from '../data/siteData.js'
 import { useStore } from '../context/StoreContext.jsx'
 
@@ -131,13 +130,13 @@ function Header({ onCartOpen, announcement }) {
               className="navbar-logo flex h-full items-center gap-2.5 py-1 pr-3 sm:gap-3"
             >
               <img
-                src={logoImage}
+                src="/elura-logo-mark.webp"
                 alt="ELURA Jewels"
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                width="160"
-                height="80"
+                width="128"
+                height="128"
                 className="logo block h-[40px] w-auto object-contain bg-transparent sm:h-[44px] lg:h-[52px]"
               />
 
@@ -279,7 +278,7 @@ function Header({ onCartOpen, announcement }) {
           <button
             type="button"
             onClick={() => setSearchOpen(false)}
-            className="absolute right-5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center text-muted transition hover:text-gold"
+            className="absolute right-3 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted transition hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/30 sm:right-4"
             aria-label="Close search"
           >
             <X className="h-4 w-4" />

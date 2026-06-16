@@ -1,7 +1,3 @@
-// FILE: src/components/PageLoader.jsx
-
-import logoImage from '../assets/brand/transparent-image1.png'
-
 function PageLoader() {
 
   return (
@@ -11,9 +7,11 @@ function PageLoader() {
       <div className="flex flex-col items-center">
 
         <img
-          src={logoImage}
+          src="/elura-logo-mark.webp"
           alt="ELURA"
-          className="h-20 w-auto object-contain"
+          width="128"
+          height="128"
+          className="h-20 w-20 object-contain"
         />
 
         <p className="mt-5 font-serif text-4xl tracking-[0.18em] text-gold animate-pulse">

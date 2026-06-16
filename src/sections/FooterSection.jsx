@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, MapPin } from 'lucide-react'
-import logoImage from '../assets/brand/elura-logo.svg'
 import { contactDetails } from '../data/siteData.js'
 import { SocialPlatformIcon } from '../components/SocialPlatformIcon.jsx'
 import { subscribeCmsDoc } from '../lib/cms.js'
@@ -54,13 +53,13 @@ function FooterSection() {
           <div>
             <div className="mb-4 flex items-center gap-3">
               <img
-                src={logoImage}
+                src="/elura-logo-mark.webp"
                 alt="ELURA Jewels"
                 loading="lazy"
                 decoding="async"
-                width="160"
-                height="80"
-                className="footer-logo h-14 w-auto object-contain bg-transparent sm:h-16"
+                width="128"
+                height="128"
+                className="footer-logo h-14 w-14 object-contain bg-transparent sm:h-16 sm:w-16"
               />
               <span className="whitespace-nowrap font-serif text-[17px] uppercase tracking-[0.12em] text-gold sm:text-[19px]">
                 ELURA JEWELS

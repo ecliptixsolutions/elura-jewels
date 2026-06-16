@@ -182,7 +182,7 @@ function CartDrawer({
                           <button
                             type="button"
                             onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                            className="inline-flex h-9 w-9 items-center justify-center"
+                            className="inline-flex h-11 w-11 items-center justify-center"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="h-3.5 w-3.5" />
@@ -193,7 +193,7 @@ function CartDrawer({
                           <button
                             type="button"
                             onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="inline-flex h-9 w-9 items-center justify-center"
+                            className="inline-flex h-11 w-11 items-center justify-center"
                             aria-label="Increase quantity"
                           >
                             <Plus className="h-3.5 w-3.5" />
@@ -203,7 +203,7 @@ function CartDrawer({
                         <button
                           type="button"
                           onClick={() => onRemove(item.id)}
-                          className="text-xs font-semibold uppercase tracking-[0.24em] text-muted transition hover:text-gold"
+                          className="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.24em] text-muted transition hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/30"
                         >
                           Remove
                         </button>

@@ -77,7 +77,7 @@ function ContactPage() {
       href="https://wa.me/447440482483"
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 flex items-center whitespace-nowrap text-base transition hover:text-gold"
+      className="mt-2 inline-flex min-h-11 items-center whitespace-nowrap text-base transition hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/30"
     >
       +44 7440482483
     </a>

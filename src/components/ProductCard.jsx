@@ -73,7 +73,7 @@ function ProductCard({ product }) {
 
               toggleWishlist(product.id)
             }}
-            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center text-white drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)] transition duration-300 hover:scale-110 hover:text-gold"
+            className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/20 text-white shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur transition duration-300 hover:scale-105 hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/40"
             aria-label="Toggle wishlist"
           >
             <Heart
