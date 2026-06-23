@@ -39,6 +39,16 @@ img {
   max-width: 100%;
 }
 
+.hero-media {
+  object-position: var(--hero-mobile-object-position, center center);
+}
+
+@media (min-width: 768px) {
+  .hero-media {
+    object-position: var(--hero-desktop-object-position, center center);
+  }
+}
+
 @layer base {
   #root {
     min-height: 100vh;

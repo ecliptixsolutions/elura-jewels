@@ -121,6 +121,12 @@ function HomePage() {
 
                   textAlignment:
                     item.textAlignment || 'left',
+
+                  desktopObjectPosition:
+                    item.desktopObjectPosition || item.objectPosition || 'center center',
+
+                  mobileObjectPosition:
+                    item.mobileObjectPosition || item.objectPositionMobile || '72% center',
                 }),
               )
 

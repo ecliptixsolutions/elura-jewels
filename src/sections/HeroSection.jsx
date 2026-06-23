@@ -97,6 +97,15 @@ function HeroSection({ slides = [] }) {
             const mediaSource =
               slide.image || slide.url
             const overlayStrength = Number(slide.overlayStrength ?? 28)
+            const desktopObjectPosition =
+              slide.desktopObjectPosition ||
+              slide.objectPosition ||
+              'center center'
+            const mobileObjectPosition =
+              slide.mobileObjectPosition ||
+              slide.objectPositionMobile ||
+              slide.objectPosition ||
+              'center center'
 
             return (
               <div
@@ -123,12 +132,10 @@ function HeroSection({ slides = [] }) {
                     width="1600"
                     height="1000"
                     style={{
-                      objectPosition:
-                        slide.desktopObjectPosition ||
-                        slide.objectPosition ||
-                        'center center',
+                      '--hero-desktop-object-position': desktopObjectPosition,
+                      '--hero-mobile-object-position': mobileObjectPosition,
                     }}
-                    className={`h-full w-full object-cover transition-transform duration-[7000ms] ${
+                    className={`hero-media h-full w-full object-cover transition-transform duration-[7000ms] ${
                       isActive
                         ? 'scale-105'
                         : 'scale-100'

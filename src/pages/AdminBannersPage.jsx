@@ -16,6 +16,7 @@ const emptyBanner = {
   label: '',
   overlayStrength: 28,
   textAlignment: 'left',
+  mobileObjectPosition: '72% center',
 }
 
 const heroFallback = {
@@ -145,6 +146,7 @@ function AdminBannersPage() {
             label: banner.label.trim(),
             overlayStrength: Number(banner.overlayStrength || 28),
             textAlignment: banner.textAlignment,
+            mobileObjectPosition: banner.mobileObjectPosition || '72% center',
           })
         }
       }
@@ -264,6 +266,21 @@ function AdminBannersPage() {
                         <option value="right">Right</option>
                       </select>
                     </div>
+                    <label className="text-sm text-muted">
+                      Mobile image focus
+                      <select
+                        value={banner.mobileObjectPosition}
+                        onChange={(event) => updateBanner(index, 'mobileObjectPosition', event.target.value)}
+                        className="input-shell mt-2"
+                      >
+                        <option value="center center">Center</option>
+                        <option value="62% center">Slightly right</option>
+                        <option value="72% center">Right / product focus</option>
+                        <option value="82% center">Far right</option>
+                        <option value="38% center">Slightly left</option>
+                        <option value="28% center">Left / product focus</option>
+                      </select>
+                    </label>
                   </div>
                 </div>
               </div>
