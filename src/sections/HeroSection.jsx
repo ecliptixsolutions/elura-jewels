@@ -267,7 +267,7 @@ function HeroSection({ slides = [] }) {
       >
         <div className="max-h-full max-w-2xl overflow-hidden pt-8 text-white max-md:flex max-md:max-w-[min(100%,22rem)] max-md:flex-col max-md:items-start max-md:justify-center md:max-[1199px]:max-w-xl md:max-[1199px]:pb-24">
           {activeSlide?.label ? (
-            <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:tracking-[0.42em]">
+            <p className="inline-flex w-fit rounded-full border border-white/20 bg-black/35 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.32em] text-[#f5d47a] shadow-[0_10px_28px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:tracking-[0.42em]">
               {activeSlide.label}
             </p>
           ) : null}
