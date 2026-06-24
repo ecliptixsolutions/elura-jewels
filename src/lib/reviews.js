@@ -3,7 +3,7 @@ import { SHOPIFY_STORE_DOMAIN } from './shopify.js'
 const JUDGEME_SCRIPT_ID = 'elura-judgeme-widget-script'
 
 const getReviewsProvider = () =>
-  (import.meta.env.VITE_REVIEWS_PROVIDER || '').trim().toLowerCase()
+  (import.meta.env.VITE_REVIEWS_PROVIDER || 'judgeme').trim().toLowerCase()
 
 const isJudgeMeEnabled = () => {
   const provider = getReviewsProvider()
@@ -36,7 +36,15 @@ const loadJudgeMeScript = () => {
   document.head.appendChild(script)
 }
 
+const getJudgeMeProductId = (productId = '') =>
+  String(productId)
+    .split('/')
+    .filter(Boolean)
+    .pop()
+    ?.replace(/[^0-9]/g, '') || String(productId)
+
 export {
+  getJudgeMeProductId,
   getJudgeMeShopDomain,
   getReviewsProvider,
   isJudgeMeEnabled,

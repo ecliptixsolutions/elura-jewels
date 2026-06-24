@@ -11,6 +11,7 @@ import { subscribeCmsDoc } from '../lib/cms.js'
 import { estimateDelivery } from '../lib/conversion.js'
 import { mapShopifyProduct } from '../lib/productMapping.js'
 import {
+  getJudgeMeProductId,
   getJudgeMeShopDomain,
   getReviewsProvider,
   loadJudgeMeScript,
@@ -629,6 +630,7 @@ function ProductScroller({ products }) {
 function ReviewsIntegrationSlot({ product }) {
   const provider = getReviewsProvider()
   const shopifyProductId = product.shopifyProductId || product.id
+  const judgeMeProductId = getJudgeMeProductId(shopifyProductId)
 
   useEffect(() => {
     if (provider === 'judgeme' || provider === 'judge.me') {
@@ -641,7 +643,7 @@ function ReviewsIntegrationSlot({ product }) {
       <section className="mt-16 rounded-[8px] border border-black/8 bg-white/60 p-7">
         <div
           className="jdgm-widget jdgm-review-widget"
-          data-id={shopifyProductId}
+          data-id={judgeMeProductId}
           data-shop-domain={getJudgeMeShopDomain()}
           data-product-title={product.name}
           data-product-url={`/product/${product.slug}`}

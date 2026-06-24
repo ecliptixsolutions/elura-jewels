@@ -5,12 +5,14 @@ import { useLocation } from 'react-router-dom'
 import { createNewsletterCustomer } from '../lib/api.js'
 import { subscribeCmsDoc } from '../lib/cms.js'
 import { trackConversionEvent } from '../lib/analytics.js'
+import newsletterFallbackImage from '../assets/optimized/hero-luxury-earrings-v2.webp'
 
 const newsletterFallback = {
   enabled: true,
   heading: 'Get 10% Off Your First Order',
   description: 'Join the ELURA Privilege Club',
   offer: '',
+  imageUrl: '',
   delaySeconds: 10,
 }
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
@@ -25,6 +27,7 @@ function NewsletterPopup() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [website, setWebsite] = useState('')
+  const popupImage = settings.imageUrl || newsletterFallbackImage
 
   useEffect(() => {
     if (!isVisible || !TURNSTILE_SITE_KEY || document.querySelector('script[data-turnstile]')) {
@@ -165,62 +168,76 @@ function NewsletterPopup() {
 
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 px-4 pb-4 backdrop-blur-[2px] sm:items-center sm:px-5 sm:pb-0">
-      <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[14px] bg-ivory p-6 shadow-[0_28px_90px_rgba(27,24,19,0.22)] sm:rounded-[8px] sm:p-9">
+      <div className="relative grid max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[16px] bg-ivory shadow-[0_28px_90px_rgba(27,24,19,0.22)] sm:rounded-[10px] md:grid-cols-[0.86fr_1fr]">
         <button
           type="button"
           onClick={closePopup}
-          className="icon-button absolute right-4 top-4"
+          className="icon-button absolute right-4 top-4 z-10 bg-ivory/80 backdrop-blur"
           aria-label="Close newsletter popup"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <p className="section-eyebrow">ELURA</p>
-        <h2 className="mt-4 text-3xl leading-tight sm:text-4xl">{settings.heading}</h2>
-        <p className="mt-4 text-sm text-muted sm:text-base">{settings.description}</p>
-        {settings.offer ? <p className="mt-3 text-sm font-semibold text-gold">{settings.offer}</p> : null}
-
-        <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="input-shell"
-            placeholder="Email address"
-            required
-          />
-          <input
-            type="text"
-            value={website}
-            onChange={(event) => setWebsite(event.target.value)}
-            className="hidden"
-            tabIndex="-1"
-            autoComplete="off"
+        <div className="relative min-h-48 overflow-hidden md:min-h-full">
+          <img
+            src={popupImage}
+            alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="h-full min-h-48 w-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent md:bg-gradient-to-r md:from-black/18 md:to-transparent" />
+        </div>
 
-          {TURNSTILE_SITE_KEY ? (
-            <div
-              className="cf-turnstile"
-              data-sitekey={TURNSTILE_SITE_KEY}
-              data-callback="eluraTurnstileCallback"
+        <div className="p-6 sm:p-9">
+          <p className="section-eyebrow">ELURA</p>
+          <h2 className="mt-4 text-3xl leading-tight sm:text-4xl">{settings.heading}</h2>
+          <p className="mt-4 text-sm text-muted sm:text-base">{settings.description}</p>
+          {settings.offer ? <p className="mt-3 text-sm font-semibold text-gold">{settings.offer}</p> : null}
+
+          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="input-shell"
+              placeholder="Email address"
+              required
             />
-          ) : null}
+            <input
+              type="text"
+              value={website}
+              onChange={(event) => setWebsite(event.target.value)}
+              className="hidden"
+              tabIndex="-1"
+              autoComplete="off"
+              aria-hidden="true"
+            />
 
-          <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Claiming Offer
-              </>
-            ) : (
-              'Claim Offer'
-            )}
-          </button>
-        </form>
+            {TURNSTILE_SITE_KEY ? (
+              <div
+                className="cf-turnstile"
+                data-sitekey={TURNSTILE_SITE_KEY}
+                data-callback="eluraTurnstileCallback"
+              />
+            ) : null}
 
-        {status ? <p className="mt-4 text-sm text-emerald">{status}</p> : null}
-        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Claiming Offer
+                </>
+              ) : (
+                'Claim Offer'
+              )}
+            </button>
+          </form>
+
+          {status ? <p className="mt-4 text-sm text-emerald">{status}</p> : null}
+          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+        </div>
       </div>
     </div>
   )

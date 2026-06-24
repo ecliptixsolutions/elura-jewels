@@ -8,6 +8,7 @@ const newsletterFallback = {
   heading: 'Get 10% Off Your First Order',
   description: 'Join the ELURA Privilege Club',
   offer: '',
+  imageUrl: '',
   delaySeconds: 10,
 }
 
@@ -52,6 +53,7 @@ function AdminNewsletterPage() {
         heading: settings.heading.trim(),
         description: settings.description.trim(),
         offer: settings.offer.trim(),
+        imageUrl: settings.imageUrl?.trim() || '',
         delaySeconds: Number(settings.delaySeconds || 10),
       })
       setDirty(false)
@@ -87,6 +89,7 @@ function AdminNewsletterPage() {
             <input value={settings.heading} onChange={(event) => updateSetting('heading', event.target.value)} className="input-shell" placeholder="Heading" />
             <textarea value={settings.description} onChange={(event) => updateSetting('description', event.target.value)} className="input-shell min-h-24 resize-none" placeholder="Description" />
             <input value={settings.offer} onChange={(event) => updateSetting('offer', event.target.value)} className="input-shell" placeholder="Offer text" />
+            <input value={settings.imageUrl || ''} onChange={(event) => updateSetting('imageUrl', event.target.value)} className="input-shell" placeholder="Popup image URL (optional)" />
             <label className="text-sm text-muted">
               Delay time in seconds
               <input type="number" min="1" value={settings.delaySeconds} onChange={(event) => updateSetting('delaySeconds', event.target.value)} className="input-shell mt-2" />
