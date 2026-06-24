@@ -121,6 +121,7 @@ function ProductPageDetail({
   trackRecentlyViewedProduct,
 }) {
   const [selectedImage, setSelectedImage] = useState(product.images[0])
+  const [failedImages, setFailedImages] = useState({})
   const [selectedVariantId, setSelectedVariantId] = useState(product.variantId)
   const [quantity, setQuantity] = useState(1)
   const [recommendedProducts, setRecommendedProducts] = useState([])
@@ -165,12 +166,29 @@ function ProductPageDetail({
     `ELURA-${String(product.id).replace(/[^a-z0-9-]/gi, '').toUpperCase()}`
   const availability = isAvailable ? 'In stock' : 'Out of stock'
   const currency = selectedProduct.currencyCode || 'GBP'
+  const visibleImages = product.images.filter((image) => image && !failedImages[image])
+  const fallbackImage = visibleImages[0] || product.images.find(Boolean) || ''
+  const currentImage = visibleImages.includes(selectedImage) ? selectedImage : fallbackImage
 
   useEffect(() => {
     setSelectedImage(product.images[0])
+    setFailedImages({})
     setSelectedVariantId(product.variantId)
     setQuantity(1)
   }, [product])
+
+  useEffect(() => {
+    if (currentImage && currentImage !== selectedImage) {
+      setSelectedImage(currentImage)
+    }
+  }, [currentImage, selectedImage])
+
+  const markImageFailed = (image) => {
+    setFailedImages((current) => ({
+      ...current,
+      [image]: true,
+    }))
+  }
 
   useEffect(() => {
     trackRecentlyViewedProduct(product.shopifyProductId || product.id)
@@ -284,9 +302,9 @@ function ProductPageDetail({
       />
       <div className="section-shell">
         <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr]">
-          <section className="grid gap-4 lg:grid-cols-[6.5rem_1fr]">
+          <section className="grid gap-4 lg:sticky lg:top-28 lg:grid-cols-[6.5rem_1fr] lg:self-start">
             <div className="order-2 flex gap-3 lg:order-1 lg:flex-col">
-              {product.images.map((image, index) => (
+              {visibleImages.map((image, index) => (
                 <button
                   key={`${product.id}-image-${index}`}
                   type="button"
@@ -302,6 +320,7 @@ function ProductPageDetail({
                     alt={`${product.name} luxury ${product.category.toLowerCase()} detail ${index + 1}`}
                     loading="lazy"
                     decoding="async"
+                    onError={() => markImageFailed(image)}
                     className="h-24 w-20 rounded-[14px] object-cover"
                   />
                 </button>
@@ -309,15 +328,22 @@ function ProductPageDetail({
             </div>
             <div className="order-1 overflow-hidden rounded-[18px] bg-linen/60 lg:order-2">
               <div className="group relative overflow-hidden">
-                <img
-                  src={selectedImage}
-                  alt={`${product.name} luxury ${product.category.toLowerCase()} by ELURA Jewels`}
-                  fetchPriority={selectedImage === product.images[0] ? 'high' : 'auto'}
-                  decoding="async"
-                  width="920"
-                  height="760"
-                  className="h-[24rem] w-full object-contain bg-linen/35 transition duration-700 group-hover:scale-105 sm:h-[32rem] sm:object-cover lg:h-[38rem]"
-                />
+                {currentImage ? (
+                  <img
+                    src={currentImage}
+                    alt={`${product.name} luxury ${product.category.toLowerCase()} by ELURA Jewels`}
+                    fetchPriority={currentImage === product.images[0] ? 'high' : 'auto'}
+                    decoding="async"
+                    width="920"
+                    height="760"
+                    onError={() => markImageFailed(currentImage)}
+                    className="h-[24rem] w-full object-contain bg-linen/35 transition duration-700 group-hover:scale-105 sm:h-[32rem] sm:object-cover lg:h-[38rem]"
+                  />
+                ) : (
+                  <div className="flex h-[24rem] items-center justify-center bg-linen/35 px-8 text-center text-sm text-muted sm:h-[32rem] lg:h-[38rem]">
+                    Product image unavailable
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -482,9 +508,7 @@ function ProductPageDetail({
           </section>
         </div>
 
-        <section className="mt-16">
-          <ReviewsIntegrationSlot product={product} />
-        </section>
+        <ReviewsIntegrationSlot product={product} />
 
         <section className="mt-16">
           <SectionHeading
@@ -614,7 +638,7 @@ function ReviewsIntegrationSlot({ product }) {
 
   if (provider === 'judgeme' || provider === 'judge.me') {
     return (
-      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+      <section className="mt-16 rounded-[8px] border border-black/8 bg-white/60 p-7">
         <div
           className="jdgm-widget jdgm-review-widget"
           data-id={shopifyProductId}
@@ -622,43 +646,35 @@ function ReviewsIntegrationSlot({ product }) {
           data-product-title={product.name}
           data-product-url={`/product/${product.slug}`}
         />
-      </div>
+      </section>
     )
   }
 
   if (provider === 'loox') {
     return (
-      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+      <section className="mt-16 rounded-[8px] border border-black/8 bg-white/60 p-7">
         <div
           id="looxReviews"
           data-product-id={shopifyProductId}
           data-product-title={product.name}
         />
-      </div>
+      </section>
     )
   }
 
   if (provider === 'shopify') {
     return (
-      <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
+      <section className="mt-16 rounded-[8px] border border-black/8 bg-white/60 p-7">
         <div
           id="shopify-product-reviews"
           data-id={shopifyProductId}
           data-product-title={product.name}
         />
-      </div>
+      </section>
     )
   }
 
-  return (
-    <div className="rounded-[8px] border border-black/8 bg-white/60 p-7">
-      <p className="section-eyebrow">Reviews Ready</p>
-      <h2 className="mt-3 text-3xl">Review provider integration prepared</h2>
-      <p className="mt-3 max-w-2xl text-sm text-muted">
-        This section is reserved for Judge.me, Loox, or Shopify Reviews widgets when a provider is connected. No mock reviews are rendered.
-      </p>
-    </div>
-  )
+  return null
 }
 
 export default ProductPage
