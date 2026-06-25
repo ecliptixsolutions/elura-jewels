@@ -24,6 +24,10 @@ const getAuthErrorMessage = (error) => {
     return 'The email or password is incorrect.'
   }
 
+  if (message.includes('auth/user-not-found')) {
+    return 'No account was found for this email address.'
+  }
+
   if (message.includes('auth/email-already-in-use')) {
     return 'An account already exists for this email. Please log in instead.'
   }
@@ -134,7 +138,7 @@ function AuthPage({ mode = 'login' }) {
       await forgotPassword(formData.email.trim())
       setFeedback({
         error: '',
-        success: 'Reset link sent to email',
+        success: 'Password reset link sent. Please check your inbox and spam folder.',
       })
     } catch (error) {
       setFeedback({

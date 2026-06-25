@@ -27,7 +27,7 @@ function formatDate(value) {
 }
 
 function ProfilePage() {
-  const { products, recentlyViewedIds, user, wishlistProducts, logout } = useStore()
+  const { forgotPassword, products, recentlyViewedIds, user, wishlistProducts, logout } = useStore()
   const [orders, setOrders] = useState([])
   const [ordersPageInfo, setOrdersPageInfo] = useState({
     hasNextPage: false,
@@ -35,6 +35,11 @@ function ProfilePage() {
   })
   const [ordersError, setOrdersError] = useState('')
   const [isOrdersLoading, setIsOrdersLoading] = useState(false)
+  const [passwordResetStatus, setPasswordResetStatus] = useState({
+    error: '',
+    success: '',
+  })
+  const [isPasswordResetSending, setIsPasswordResetSending] = useState(false)
 
   useEffect(() => {
     let isActive = true
@@ -101,6 +106,34 @@ function ProfilePage() {
     }
   }
 
+  async function handlePasswordReset() {
+    if (!user?.email) {
+      setPasswordResetStatus({
+        error: 'No email address is linked to this account.',
+        success: '',
+      })
+      return
+    }
+
+    setIsPasswordResetSending(true)
+    setPasswordResetStatus({ error: '', success: '' })
+
+    try {
+      await forgotPassword(user.email)
+      setPasswordResetStatus({
+        error: '',
+        success: 'Password reset link sent. Please check your inbox and spam folder.',
+      })
+    } catch (error) {
+      setPasswordResetStatus({
+        error: error.message || 'Unable to send password reset link right now.',
+        success: '',
+      })
+    } finally {
+      setIsPasswordResetSending(false)
+    }
+  }
+
   if (!user) {
     return (
       <div className="section-spacing">
@@ -163,6 +196,27 @@ function ProfilePage() {
                 <p className="font-semibold text-ink">Account ID</p>
                 <p className="mt-1">{user.loyaltyId}</p>
               </div>
+            </div>
+
+            <div className="mt-10 border-t border-black/8 pt-7">
+              <p className="section-eyebrow">Password & Security</p>
+              <p className="mt-2 text-sm text-muted">
+                Send a secure Firebase password reset link to {user.email}.
+              </p>
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="line-link mt-5 inline-flex"
+                disabled={isPasswordResetSending}
+              >
+                {isPasswordResetSending ? 'Sending Reset Link' : 'Reset Password'}
+              </button>
+              {passwordResetStatus.error ? (
+                <p className="mt-4 text-sm text-red-600">{passwordResetStatus.error}</p>
+              ) : null}
+              {passwordResetStatus.success ? (
+                <p className="mt-4 text-sm text-muted">{passwordResetStatus.success}</p>
+              ) : null}
             </div>
 
             <div className="mt-10 border-t border-black/8 pt-7">
