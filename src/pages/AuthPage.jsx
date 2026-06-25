@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import SEO from '../components/SEO.jsx'
 import { useStore } from '../context/StoreContext.jsx'
 import { pageSeo } from '../seo/seoConfig.js'
@@ -60,6 +61,7 @@ function AuthPage({ mode = 'login' }) {
     success: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const updateField = (field) => (event) => {
     setFormData((current) => ({
@@ -237,14 +239,28 @@ function AuthPage({ mode = 'login' }) {
                 <label className="mb-3 block text-xs font-medium uppercase tracking-[0.24em] text-muted">
                   Password
                 </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={updateField('password')}
-                  className="input-shell"
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={updateField('password')}
+                    className="input-shell pr-12"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted transition hover:text-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
                 {isLogin ? (
                   <button
                     type="button"
