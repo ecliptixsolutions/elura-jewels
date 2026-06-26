@@ -1,4 +1,18 @@
-import { Bell, ChevronDown, Minus, PackageCheck, Plus, ShieldCheck, Sparkles, Truck, Undo2 } from 'lucide-react'
+import {
+  Bell,
+  ChevronDown,
+  Maximize2,
+  Minus,
+  PackageCheck,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  Undo2,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
@@ -125,6 +139,8 @@ function ProductPageDetail({
   const [failedImages, setFailedImages] = useState({})
   const [selectedVariantId, setSelectedVariantId] = useState(product.variantId)
   const [quantity, setQuantity] = useState(1)
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
+  const [imagePreviewZoom, setImagePreviewZoom] = useState(1)
   const [recommendedProducts, setRecommendedProducts] = useState([])
   const [careGuide, setCareGuide] = useState(careGuideFallback)
   const [backInStockEmail, setBackInStockEmail] = useState('')
@@ -183,12 +199,41 @@ function ProductPageDetail({
       setSelectedImage(currentImage)
     }
   }, [currentImage, selectedImage])
+  useEffect(() => {
+    setImagePreviewZoom(1)
+  }, [currentImage])
+  useEffect(() => {
+    if (!isImagePreviewOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleKeydown = (event) => {
+      if (event.key === 'Escape') {
+        setIsImagePreviewOpen(false)
+      }
+      if (event.key === '+' || event.key === '=') {
+        setImagePreviewZoom((current) => Math.min(2.5, Number((current + 0.25).toFixed(2))))
+      }
+      if (event.key === '-' || event.key === '_') {
+        setImagePreviewZoom((current) => Math.max(1, Number((current - 0.25).toFixed(2))))
+      }
+    }
+    window.addEventListener('keydown', handleKeydown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeydown)
+    }
+  }, [isImagePreviewOpen])
 
   const markImageFailed = (image) => {
     setFailedImages((current) => ({
       ...current,
       [image]: true,
     }))
+  }
+  const openImagePreview = () => {
+    if (!currentImage) return
+    setImagePreviewZoom(1)
+    setIsImagePreviewOpen(true)
   }
 
   useEffect(() => {
@@ -310,6 +355,7 @@ function ProductPageDetail({
                   key={`${product.id}-image-${index}`}
                   type="button"
                   onClick={() => setSelectedImage(image)}
+                  aria-label={'View ' + product.name + ' image ' + (index + 1)}
                   className={`overflow-hidden rounded-[14px] transition ${
                     image === selectedImage
                       ? 'ring-1 ring-gold'
@@ -328,24 +374,35 @@ function ProductPageDetail({
               ))}
             </div>
             <div className="order-1 overflow-hidden rounded-[18px] bg-linen/60 lg:order-2">
-              <div className="group relative overflow-hidden">
+              <button
+                type="button"
+                onClick={openImagePreview}
+                className="group relative block w-full overflow-hidden text-left"
+                aria-label={'Open zoom preview for ' + product.name}
+              >
                 {currentImage ? (
-                  <img
-                    src={currentImage}
-                    alt={`${product.name} luxury ${product.category.toLowerCase()} by ELURA Jewels`}
-                    fetchPriority={currentImage === product.images[0] ? 'high' : 'auto'}
-                    decoding="async"
-                    width="920"
-                    height="760"
-                    onError={() => markImageFailed(currentImage)}
-                    className="h-[24rem] w-full object-contain bg-linen/35 transition duration-700 group-hover:scale-105 sm:h-[32rem] sm:object-cover lg:h-[38rem]"
-                  />
+                  <>
+                    <img
+                      src={currentImage}
+                      alt={product.name + ' luxury ' + product.category.toLowerCase() + ' by ELURA Jewels'}
+                      fetchPriority={currentImage === product.images[0] ? 'high' : 'auto'}
+                      decoding="async"
+                      width="920"
+                      height="760"
+                      onError={() => markImageFailed(currentImage)}
+                      className="h-[24rem] w-full bg-linen/35 object-contain transition duration-700 group-hover:scale-105 sm:h-[32rem] sm:object-cover lg:h-[38rem]"
+                    />
+                    <span className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-ink/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white opacity-100 shadow-lg backdrop-blur transition sm:opacity-0 sm:group-hover:opacity-100">
+                      <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                      Zoom
+                    </span>
+                  </>
                 ) : (
                   <div className="flex h-[24rem] items-center justify-center bg-linen/35 px-8 text-center text-sm text-muted sm:h-[32rem] lg:h-[38rem]">
                     Product image unavailable
                   </div>
                 )}
-              </div>
+              </button>
             </div>
           </section>
 
@@ -587,6 +644,62 @@ function ProductPageDetail({
           </div>
         </div>
       ) : null}
+      {isImagePreviewOpen && currentImage ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col bg-ink/90 p-4 text-white backdrop-blur"
+          role="dialog"
+          aria-modal="true"
+          aria-label={product.name + ' image preview'}
+        >
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{product.name}</p>
+              <p className="text-xs text-white/65">Zoom {Math.round(imagePreviewZoom * 100)}%</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setImagePreviewZoom((current) => Math.max(1, Number((current - 0.25).toFixed(2))))}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:opacity-40"
+                aria-label="Zoom out"
+                disabled={imagePreviewZoom <= 1}
+              >
+                <ZoomOut className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setImagePreviewZoom((current) => Math.min(2.5, Number((current + 0.25).toFixed(2))))}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:opacity-40"
+                aria-label="Zoom in"
+                disabled={imagePreviewZoom >= 2.5}
+              >
+                <ZoomIn className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImagePreviewOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink transition hover:bg-linen"
+                aria-label="Close image preview"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsImagePreviewOpen(false)}
+            className="mt-4 flex min-h-0 flex-1 cursor-zoom-out items-center justify-center overflow-auto rounded-[18px] bg-black/20 p-4"
+            aria-label="Close image preview backdrop"
+          >
+            <img
+              src={currentImage}
+              alt={product.name + ' zoomed preview'}
+              className="max-h-full max-w-full rounded-[14px] object-contain shadow-2xl transition-transform duration-200"
+              style={{ transform: 'scale(' + imagePreviewZoom + ')' }}
+            />
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -680,3 +793,4 @@ function ReviewsIntegrationSlot({ product }) {
 }
 
 export default ProductPage
+
